@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PawMind Prototype v2.0</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', 'Noto Sans SC', sans-serif; }
+    body { background: #f0f2f5; }
+    .phone-frame { width: 375px; height: 812px; background: white; border-radius: 40px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden; position: relative; margin: 20px auto; }
+    .page { display: none; height: 100%; overflow-y: auto; }
+    .page.active { display: block; }
+    .tab-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 80px; background: white; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-around; align-items: center; padding-bottom: 20px; }
+    .tab-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; padding: 8px 16px; }
+    .tab-item.active { color: #3b82f6; }
+    .tab-item:not(.active) { color: #9ca3af; }
+    .status-bar { height: 44px; background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; font-size: 14px; font-weight: 600; }
+    .nav-bar { height: 56px; background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid #f3f4f6; }
+    .content-area { height: calc(100% - 180px); overflow-y: auto; padding: 16px; }
+    .card { background: white; border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .metric-card { background: linear-gradient(135deg, #eff6ff, #f0f9ff); border-radius: 12px; padding: 16px; min-width: 140px; }
+    .metric-card.locked { background: #f3f4f6; opacity: 0.7; }
+    .btn-primary { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 12px 24px; border-radius: 24px; font-weight: 600; border: none; cursor: pointer; }
+    .btn-secondary { background: #f3f4f6; color: #374151; padding: 12px 24px; border-radius: 24px; font-weight: 500; border: none; cursor: pointer; }
+    .chat-bubble { max-width: 75%; padding: 12px 16px; border-radius: 18px; margin-bottom: 8px; }
+    .chat-bubble.user { background: #3b82f6; color: white; margin-left: auto; border-bottom-right-radius: 4px; }
+    .chat-bubble.ai { background: #f3f4f6; color: #374151; border-bottom-left-radius: 4px; }
+    .device-card { border: 2px solid #e5e7eb; border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 12px; }
+    .device-card.online { border-color: #10b981; }
+    .diagnosis-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .diagnosis-item { background: #f9fafb; border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .diagnosis-item:hover { background: #eff6ff; transform: translateY(-2px); }
+    .timeline-item { display: flex; gap: 12px; padding: 16px 0; border-bottom: 1px solid #f3f4f6; }
+    .timeline-dot { width: 12px; height: 12px; border-radius: 50%; background: #3b82f6; margin-top: 4px; flex-shrink: 0; }
+    .input-method-btn { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: #f3f4f6; border-radius: 20px; font-size: 14px; cursor: pointer; }
+    .input-method-btn.active { background: #3b82f6; color: white; }
+    /* Focus mode styles */
+    .focus-mode .non-focused { pointer-events: none; opacity: 0.3; }
+    .focus-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; display: none; }
+    .focus-overlay.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span>9:41</span>
+      <div class="flex gap-1">
+        <span>📶</span>
+        <span>📡</span>
+        <span>🔋</span>
+      </div>
+    </div>
+
+    <!-- Page: Home -->
+    <div id="home" class="page active">
+      <div class="nav-bar">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">🐾</span>
+          <span class="font-bold text-lg">PawMind</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-gray-500">毛球 ▼</span>
+          <span>🔔</span>
+          <span>👤</span>
+        </div>
+      </div>
+      <div class="content-area">
+        <!-- Pet Status Card -->
+        <div class="card" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl">🐱</div>
+            <div>
+              <div class="text-sm text-gray-600">毛球今天</div>
+              <div class="text-xl font-bold text-gray-800">😊 很开心</div>
+              <div class="text-sm text-gray-600 mt-1">吃了好多，还在沙发上打了个盹~</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="flex justify-between mb-4">
+          <div class="text-center cursor-pointer">
+            <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center text-2xl mb-1">🎾</div>
+            <span class="text-xs text-gray-600">一键逗宠</span>
+          </div>
+          <div class="text-center cursor-pointer">
+            <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center text-2xl mb-1">🍽️</div>
+            <span class="text-xs text-gray-600">喂食提醒</span>
+          </div>
+          <div class="text-center cursor-pointer">
+            <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center text-2xl mb-1">📹</div>
+            <span class="text-xs text-gray-600">查看直播</span>
+          </div>
+          <div class="text-center cursor-pointer">
+            <div class="w-14 h-14 bg-pink-100 rounded-full flex items-center justify-center text-2xl mb-1">🎤</div>
+            <span class="text-xs text-gray-600">录语音</span>
+          </div>
+        </div>
+
+        <!-- Health Metrics Preview -->
+        <div class="card">
+          <div class="flex justify-between items-center mb-3">
+            <span class="font-semibold">今日健康</span>
+            <span class="text-blue-500 text-sm cursor-pointer" onclick="navigate('health')">查看全部 →</span>
+          </div>
+          <div class="flex gap-3 overflow-x-auto pb-2">
+            <div class="metric-card">
+              <div class="text-sm text-gray-500">体重</div>
+              <div class="text-xl font-bold">4.2<span class="text-sm font-normal">kg</span></div>
+              <div class="text-xs text-green-500">↗ 正常</div>
+            </div>
+            <div class="metric-card">
+              <div class="text-sm text-gray-500">饮食量</div>
+              <div class="text-xl font-bold">85<span class="text-sm font-normal">g</span></div>
+              <div class="text-xs text-green-500">↗ 正常</div>
+            </div>
+            <div class="metric-card locked">
+              <div class="text-sm text-gray-500">饮水量</div>
+              <div class="text-xl font-bold">--</div>
+              <div class="text-xs text-gray-400">🔒 未绑定</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Message -->
+        <div class="card" style="background: linear-gradient(135deg, #eff6ff, #f0f9ff);">
+          <div class="flex items-start gap-3">
+            <span class="text-2xl">🤖</span>
+            <div>
+              <div class="text-sm text-gray-500 mb-1">AI 观察</div>
+              <div class="text-gray-700">毛球下午多喝水了，很棒！继续保持哦~</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page: CareAI -->
+    <div id="careai" class="page">
+      <div class="nav-bar">
+        <span class="font-bold text-lg">🩺 CareAI</span>
+        <span>⚙️</span>
+      </div>
+      <div class="content-area">
+        <!-- Daily Tip -->
+        <div class="card" style="background: linear-gradient(135deg, #dbeafe, #ede9fe);">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="bg-blue-500 text-white text-xs px-2 py-1 rounded">每日小知识</span>
+            <span class="text-xs text-gray-500">2026.04.14</span>
+          </div>
+          <div class="text-gray-800 font-medium mb-2">猫咪每天需要喝多少水？</div>
+          <div class="text-sm text-gray-600">成年猫每公斤体重需要 40-60ml 水。一只 4kg 的猫每天需要约 200ml 水。可以通过观察尿团大小和颜色来判断饮水是否充足。</div>
+        </div>
+
+        <!-- AI Diagnosis Grid -->
+        <div class="card">
+          <div class="font-semibold mb-4">AI 诊断</div>
+          <div class="diagnosis-grid">
+            <div class="diagnosis-item" onclick="showToast('口腔检查 - 功能演示')">
+              <div class="text-2xl mb-2">🦷</div>
+              <div class="text-sm font-medium">口腔检查</div>
+            </div>
+            <div class="diagnosis-item" onclick="showToast('粪便检查 - 功能演示')">
+              <div class="text-2xl mb-2">💩</div>
+              <div class="text-sm font-medium">粪便检查</div>
+            </div>
+            <div class="diagnosis-item" onclick="showToast('皮肤检查 - 功能演示')">
+              <div class="text-2xl mb-2">🔍</div>
+              <div class="text-sm font-medium">皮肤检查</div>
+            </div>
+            <div class="diagnosis-item" onclick="showToast('报告解读 - 功能演示')">
+              <div class="text-2xl mb-2">📋</div>
+              <div class="text-sm font-medium">报告解读</div>
+            </div>
+            <div class="diagnosis-item" onclick="showToast('药品识别 - 功能演示')">
+              <div class="text-2xl mb-2">💊</div>
+              <div class="text-sm font-medium">药品识别</div>
+            </div>
+            <div class="diagnosis-item" onclick="showToast('更多功能 - 敬请期待')">
+              <div class="text-2xl mb-2">➕</div>
+              <div class="text-sm font-medium">更多</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="text-xs text-gray-400 text-center mt-4">
+          ⚠️ AI 分析仅供参考，不替代专业兽医诊断
+        </div>
+      </div>
+
+      <!-- Floating Chat Button -->
+      <div style="position: absolute; bottom: 100px; right: 20px;">
+        <button class="btn-primary" style="width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(59,130,246,0.4);" onclick="navigate('chat')">
+          💬
+        </button>
+      </div>
+    </div>
+
+    <!-- Page: Chat -->
+    <div id="chat" class="page">
+      <div class="nav-bar">
+        <div class="flex items-center gap-3">
+          <span class="cursor-pointer" onclick="navigate('careai')">←</span>
+          <div>
+            <div class="font-bold">CareAI 健康助手</div>
+            <div class="text-xs text-gray-500">在线</div>
+          </div>
+        </div>
+        <span>⋮</span>
+      </div>
+      <div class="content-area" style="background: #f9fafb;">
+        <div class="chat-bubble ai">
+          <div class="text-sm">你好！我是 CareAI 健康助手，有什么宠物健康问题可以问我哦~</div>
+          <div class="text-xs text-gray-400 mt-1">09:30</div>
+        </div>
+        <div class="chat-bubble user">
+          <div class="text-sm">猫咪最近总是吐毛球，正常吗？</div>
+          <div class="text-xs text-blue-200 mt-1 text-right">09:31</div>
+        </div>
+        <div class="chat-bubble ai">
+          <div class="text-sm">偶尔吐毛球是正常的，猫咪通过呕吐排出舔入的毛发。但如果<strong>频繁呕吐（每周超过1-2次）</strong>，或者伴有以下症状，建议就医：</div>
+          <div class="mt-2 text-sm">
+            • 食欲不振<br>
+            • 精神萎靡<br>
+            • 呕吐物带血或异物<br>
+            • 持续干呕但吐不出
+          </div>
+          <div class="text-xs text-gray-400 mt-2">09:31</div>
+        </div>
+        <div class="chat-bubble ai">
+          <div class="text-sm">建议定期给毛球梳毛，减少吞入的毛发量。也可以适量喂食化毛膏或猫草帮助排毛。</div>
+          <div class="text-xs text-gray-400 mt-1">09:31</div>
+        </div>
+      </div>
+      <!-- Chat Input -->
+      <div style="position: absolute; bottom: 80px; left: 0; right: 0; padding: 12px 16px; background: white; border-top: 1px solid #e5e7eb;">
+        <div class="flex items-center gap-2">
+          <span class="text-xl cursor-pointer">📎</span>
+          <input type="text" placeholder="输入健康问题..." class="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm outline-none">
+          <span class="text-xl cursor-pointer">🎤</span>
+          <span class="text-xl cursor-pointer">📷</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page: Health -->
+    <div id="health" class="page">
+      <div class="nav-bar">
+        <span class="font-bold text-lg">📊 健康</span>
+        <div class="flex gap-3">
+          <span class="cursor-pointer" onclick="navigate('device')">📱</span>
+          <span>➕</span>
+        </div>
+      </div>
+      <div class="content-area">
+        <!-- Health Metrics -->
+        <div class="card">
+          <div class="flex justify-between items-center mb-4">
+            <span class="font-semibold">健康指标</span>
+            <div class="flex bg-gray-100 rounded-lg p-1">
+              <span class="px-3 py-1 bg-white rounded-md text-sm shadow-sm">24h</span>
+              <span class="px-3 py-1 text-sm text-gray-500">7天</span>
+            </div>
+          </div>
+          <div class="flex gap-3 overflow-x-auto pb-2">
+            <div class="metric-card" style="min-width: 120px;">
+              <div class="text-sm text-gray-500">体重</div>
+              <div class="text-2xl font-bold">4.2<span class="text-sm font-normal">kg</span></div>
+              <div class="text-xs text-green-500">↗ +0.1kg</div>
+            </div>
+            <div class="metric-card" style="min-width: 120px;">
+              <div class="text-sm text-gray-500">饮食量</div>
+              <div class="text-2xl font-bold">85<span class="text-sm font-normal">g</span></div>
+              <div class="text-xs text-green-500">↗ 正常</div>
+            </div>
+            <div class="metric-card locked" style="min-width: 120px;">
+              <div class="text-sm text-gray-500">饮水量</div>
+              <div class="text-2xl font-bold text-gray-400">--</div>
+              <div class="text-xs text-gray-400">🔒 未绑定</div>
+            </div>
+            <div class="metric-card locked" style="min-width: 120px;">
+              <div class="text-sm text-gray-500">运动量</div>
+              <div class="text-2xl font-bold text-gray-400">--</div>
+              <div class="text-xs text-gray-400">🔒 未绑定</div>
+            </div>
+          </div>
+          <div class="mt-3 text-xs text-gray-400 text-center">
+            快来解锁更多指标监测，关注毛孩子的健康吧 →
+          </div>
+        </div>
+
+        <!-- Health Records -->
+        <div class="card">
+          <div class="flex justify-between items-center mb-4">
+            <span class="font-semibold">健康档案</span>
+            <button class="btn-primary text-sm py-2 px-4" onclick="navigate('addRecord')">+ 添加记录</button>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="flex-1">
+              <div class="flex justify-between">
+                <span class="font-medium">年度体检</span>
+                <span class="text-sm text-gray-500">2026.03.15</span>
+              </div>
+              <div class="text-sm text-gray-600 mt-1">爱宠医院 | 各项指标正常</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot" style="background: #f59e0b;"></div>
+            <div class="flex-1">
+              <div class="flex justify-between">
+                <span class="font-medium">疫苗接种</span>
+                <span class="text-sm text-gray-500">2026.02.20</span>
+              </div>
+              <div class="text-sm text-gray-600 mt-1">妙三多 | 下次接种 2027.02.20</div>
+            </div>
+          </div>
+          <div class="timeline-item" style="border-bottom: none;">
+            <div class="timeline-dot" style="background: #10b981;"></div>
+            <div class="flex-1">
+              <div class="flex justify-between">
+                <span class="font-medium">日常观察</span>
+                <span class="text-sm text-gray-500">2026.04.10</span>
+              </div>
+              <div class="text-sm text-gray-600 mt-1">精神状态很好，食欲正常</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vaccine Card -->
+        <div class="card" onclick="navigate('vaccine')">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">💉</span>
+              <div>
+                <div class="font-medium">电子疫苗本</div>
+                <div class="text-sm text-gray-500">下次接种：2027.02.20</div>
+              </div>
+            </div>
+            <span class="text-gray-400">→</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page: Add Health Record -->
+    <div id="addRecord" class="page">
+      <div class="nav-bar">
+        <div class="flex items-center gap-3">
+          <span class="cursor-pointer" onclick="navigate('health')">←</span>
+          <span class="font-bold">添加健康档案</span>
+        </div>
+        <span class="text-blue-500 font-medium">保存</span>
+      </div>
+      <div class="content-area">
+        <!-- Record Type -->
+        <div class="flex gap-2 mb-4">
+          <button class="flex-1 py-2 bg-blue-500 text-white rounded-lg font-medium">就诊记录</button>
+          <button class="flex-1 py-2 bg-gray-100 text-gray-600 rounded-lg font-medium">日常观察</button>
+        </div>
+
+        <!-- Input Methods -->
+        <div class="flex gap-2 mb-4">
+          <div class="input-method-btn active">
+            <span>⌨️</span>
+            <span>键盘</span>
+          </div>
+          <div class="input-method-btn">
+            <span>📷</span>
+            <span>OCR</span>
+          </div>
+          <div class="input-method-btn">
+            <span>🎤</span>
+            <span>语音</span>
+          </div>
+        </div>
+
+        <!-- Form -->
+        <div class="card">
+          <div class="mb-4">
+            <label class="block text-sm text-gray-600 mb-2">就诊日期</label>
+            <input type="date" class="w-full border border-gray-200 rounded-lg px-4 py-3" value="2026-04-14">
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm text-gray-600 mb-2">医院名称</label>
+            <input type="text" placeholder="请输入医院名称" class="w-full border border-gray-200 rounded-lg px-4 py-3">
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm text-gray-600 mb-2">诊断结果</label>
+            <textarea placeholder="请输入诊断结果" class="w-full border border-gray-200 rounded-lg px-4 py-3 h-24 resize-none"></textarea>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm text-gray-600 mb-2">处方用药</label>
+            <textarea placeholder="请输入处方用药" class="w-full border border-gray-200 rounded-lg px-4 py-3 h-20 resize-none"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm text-gray-600 mb-2">附件图片</label>
+            <div class="flex gap-2">
+              <div class="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400">
+                <span class="text-2xl">+</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page: Vaccine -->
+    <div id="vaccine" class="page">
+      <div class="nav-bar">
+        <div class="flex items-center gap-3">
+          <span class="cursor-pointer" onclick="navigate('health')">←</span>
+          <span class="font-bold">电子疫苗本</span>
+        </div>
+        <span class="text-blue-500 text-2xl">+</span>
+      </div>
+      <div class="content-area">
+        <!-- Next Vaccine Alert -->
+        <div class="card" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-2xl">⏰</span>
+            <span class="font-semibold">下次接种提醒</span>
+          </div>
+          <div class="text-gray-800">
+            <div class="font-medium">妙三多加强针</div>
+            <div class="text-sm text-gray-600 mt-1">预计接种时间：2027年2月20日</div>
+            <div class="text-sm text-gray-600">还有 312 天</div>
+          </div>
+        </div>
+
+        <!-- Vaccine List -->
+        <div class="card">
+          <div class="font-semibold mb-4">接种记录</div>
+          <div class="timeline-item">
+            <div class="timeline-dot" style="background: #10b981;"></div>
+            <div class="flex-1">
+              <div class="flex justify-between">
+                <span class="font-medium">妙三多</span>
+                <span class="text-sm text-gray-500">2026.02.20</span>
+              </div>
+              <div class="text-sm text-gray-600 mt-1">爱宠医院 | 批次：A123456</div>
+              <div class="text-xs text-gray-400 mt-1">下次：2027.02.20</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot" style="background: #10b981;"></div>
+            <div class="flex-1">
+              <div class="flex justify-between">
+                <span class="font-medium">狂犬疫苗</span>
+                <span class="text-sm text-gray-500">2026.01.15</span>
+              </div>
+              <div class="text-sm text-gray-600 mt-1">爱宠医院 | 批次：B789012</div>
+              <div class="text-xs text-gray-400 mt-1">下次：2027.01.15</div>
+            </div>
+          </div>
+          <div class="timeline-item" style="border-bottom: none;">
+            <div class="timeline-dot" style="background: #10b981;"></div>
+            <div class="flex-1">
+              <div class="flex justify-between">
+                <span class="font-medium">妙三多（第二针）</span>
+                <span class="text-sm text-gray-500">2025.12.20</span>
+              </div>
+              <div class="text-sm text-gray-600 mt-1">爱宠医院</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page: Device -->
+    <div id="device" class="page">
+      <div class="nav-bar">
+        <div class="flex items-center gap-3">
+          <span class="cursor-pointer" onclick="navigate('health')">←</span>
+          <span class="font-bold">设备管理</span>
+        </div>
+        <span class="text-blue-500 text-2xl">+</span>
+      </div>
+      <div class="content-area">
+        <!-- Device List -->
+        <div class="card">
+          <div class="font-semibold mb-4">已绑定设备</div>
+          <div class="device-card online mb-3">
+            <span class="text-3xl">🥣</span>
+            <div class="flex-1">
+              <div class="font-medium">毛球的喂食器</div>
+              <div class="text-sm text-gray-500">智能喂食器 Pro</div>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="text-xs text-green-500">● 在线</span>
+                <span class="text-xs text-gray-400">🔋 85%</span>
+              </div>
+            </div>
+            <span class="text-gray-400">→</span>
+          </div>
+        </div>
+
+        <!-- Device Shop -->
+        <div class="card">
+          <div class="flex justify-between items-center mb-4">
+            <span class="font-semibold">设备商城</span>
+            <span class="text-blue-500 text-sm">查看全部 →</span>
+          </div>
+          <div class="device-card mb-3">
+            <span class="text-3xl">💧</span>
+            <div class="flex-1">
+              <div class="font-medium">智能饮水机</div>
+              <div class="text-sm text-gray-500">实时监测饮水量</div>
+              <div class="text-sm text-blue-500 mt-1">¥299</div>
+            </div>
+            <button class="bg-blue-500 text-white text-sm px-4 py-2 rounded-full">购买</button>
+          </div>
+          <div class="device-card">
+            <span class="text-3xl">📿</span>
+            <div class="flex-1">
+              <div class="font-medium">智能项圈</div>
+              <div class="text-sm text-gray-500">运动量/睡眠/体温监测</div>
+              <div class="text-sm text-blue-500 mt-1">¥199</div>
+            </div>
+            <button class="bg-blue-500 text-white text-sm px-4 py-2 rounded-full">购买</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page: Growth -->
+    <div id="growth" class="page">
+      <div class="nav-bar">
+        <span class="font-bold text-lg">📸 成长册</span>
+        <div class="flex gap-3">
+          <span>📅</span>
+          <span>➕</span>
+        </div>
+      </div>
+      <div class="content-area">
+        <!-- Monthly Report -->
+        <div class="card" style="background: linear-gradient(135deg, #fce7f3, #fae8ff);">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="text-2xl">📊</span>
+            <div>
+              <div class="font-semibold">3月成长报告已生成</div>
+              <div class="text-sm text-gray-600">记录 12 个精彩瞬间</div>
+            </div>
+          </div>
+          <button class="btn-primary text-sm py-2 px-4">查看报告</button>
+        </div>
+
+        <!-- Timeline -->
+        <div class="card">
+          <div class="font-semibold mb-4">成长时间轴</div>
+          <div class="timeline-item">
+            <div class="timeline-dot" style="background: #ec4899;"></div>
+            <div class="flex-1">
+              <div class="w-full h-32 bg-gray-100 rounded-lg mb-2 flex items-center justify-center text-4xl">🐱</div>
+              <div class="flex justify-between">
+                <span class="font-medium">第一次上沙发</span>
+                <span class="text-sm text-gray-500">今天</span>
+              </div>
+              <div class="text-sm text-gray-600 mt-1">终于敢跳上沙发了，小勇士！</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot" style="background: #ec4899;"></div>
+            <div class="flex-1">
+              <div class="w-full h-32 bg-gray-100 rounded-lg mb-2 flex items-center justify-center text-4xl">😺</div>
+              <div class="flex justify-between">
+                <span class="font-medium">打疫苗</span>
+                <span class="text-sm text-gray-500">3天前</span>
+              </div>
+              <div class="text-sm text-gray-600 mt-1">勇敢的毛球，打针都不怕</div>
+            </div>
+          </div>
+          <div class="timeline-item" style="border-bottom: none;">
+            <div class="timeline-dot" style="background: #ec4899;"></div>
+            <div class="flex-1">
+              <div class="w-full h-32 bg-gray-100 rounded-lg mb-2 flex items-center justify-center text-4xl">🎂</div>
+              <div class="flex justify-between">
+                <span class="font-medium">2岁生日</span>
+                <span class="text-sm text-gray-500">1个月前</span>
+              </div>
+              <div class="text-sm text-gray-600 mt-1">生日快乐！吃了最爱的罐头</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page: Profile -->
+    <div id="profile" class="page">
+      <div class="nav-bar">
+        <span class="font-bold text-lg">👤 我</span>
+        <span>⚙️</span>
+      </div>
+      <div class="content-area">
+        <!-- User Info -->
+        <div class="card">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-2xl">👤</div>
+            <div>
+              <div class="font-bold">铲屎官小王</div>
+              <div class="text-sm text-gray-500">138****8888</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pet Switcher -->
+        <div class="card">
+          <div class="font-semibold mb-4">我的宠物</div>
+          <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border-2 border-blue-500">
+            <span class="text-3xl">🐱</span>
+            <div class="flex-1">
+              <div class="font-medium">毛球</div>
+              <div class="text-sm text-gray-500">英短 | 2岁</div>
+            </div>
+            <span class="text-blue-500">✓</span>
+          </div>
+          <button class="w-full mt-3 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 flex items-center justify-center gap-2">
+            <span>+</span>
+            <span>添加宠物</span>
+          </button>
+        </div>
+
+        <!-- Menu Items -->
+        <div class="card">
+          <div class="flex items-center justify-between py-3 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+              <span>📱</span>
+              <span>设备管理</span>
+            </div>
+            <span class="text-gray-400">→</span>
+          </div>
+          <div class="flex items-center justify-between py-3 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+              <span>🔔</span>
+              <span>通知设置</span>
+            </div>
+            <span class="text-gray-400">→</span>
+          </div>
+          <div class="flex items-center justify-between py-3 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+              <span>💎</span>
+              <span>会员中心</span>
+            </div>
+            <span class="text-gray-400">→</span>
+          </div>
+          <div class="flex items-center justify-between py-3">
+            <div class="flex items-center gap-3">
+              <span>❓</span>
+              <span>帮助与反馈</span>
+            </div>
+            <span class="text-gray-400">→</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item active" onclick="switchTab('home')">
+        <span class="text-xl">🏠</span>
+        <span class="text-xs">首页</span>
+      </div>
+      <div class="tab-item" onclick="switchTab('careai')">
+        <span class="text-xl">🩺</span>
+        <span class="text-xs">CareAI</span>
+      </div>
+      <div class="tab-item" onclick="switchTab('health')">
+        <span class="text-xl">📊</span>
+        <span class="text-xs">健康</span>
+      </div>
+      <div class="tab-item" onclick="switchTab('growth')">
+        <span class="text-xl">📸</span>
+        <span class="text-xs">成长册</span>
+      </div>
+      <div class="tab-item" onclick="switchTab('profile')">
+        <span class="text-xl">👤</span>
+        <span class="text-xs">我</span>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 12px 24px; border-radius: 24px; display: none; z-index: 200;"></div>
+  </div>
+
+  <script>
+    // Navigation
+    function navigate(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+    }
+
+    function switchTab(tabName) {
+      // Update tab active state
+      document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      
+      // Navigate to page
+      navigate(tabName);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 2000);
+    }
+
+    // Focus mode from URL params
+    const params = new URLSearchParams(window.location.search);
+    const focus = params.get('focus');
+    if (focus) {
+      document.body.classList.add('focus-mode');
+      // Lock non-focused areas based on focus parameter
+      console.log('Focus mode:', focus);
+    }
+  </script>
+</body>
+</html>

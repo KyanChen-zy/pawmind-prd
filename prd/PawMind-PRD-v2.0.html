@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PawMind — AI 宠物健康管理平台 | PRD v2.0</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', 'Noto Sans SC', sans-serif; }
+    html { scroll-behavior: smooth; }
+    body { background: #f8fafc; }
+    .toc { position: fixed; left: 0; top: 0; width: 280px; height: 100vh; background: white; border-right: 1px solid #e2e8f0; overflow-y: auto; z-index: 50; }
+    .toc a { display: block; padding: 8px 16px; color: #64748b; text-decoration: none; font-size: 14px; border-left: 3px solid transparent; transition: all 0.2s; }
+    .toc a:hover { background: #f1f5f9; color: #0f172a; border-left-color: #3b82f6; }
+    .toc a.active { background: #eff6ff; color: #1d4ed8; border-left-color: #3b82f6; font-weight: 500; }
+    .toc .toc-h1 { padding-left: 16px; font-weight: 600; }
+    .toc .toc-h2 { padding-left: 32px; }
+    .toc .toc-h3 { padding-left: 48px; font-size: 13px; }
+    .main-content { margin-left: 280px; min-height: 100vh; }
+    .content-wrapper { max-width: 900px; margin: 0 auto; padding: 40px 32px; }
+    .header-bar { position: fixed; top: 0; left: 280px; right: 0; height: 60px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #e2e8f0; z-index: 40; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; }
+    .version-badge { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+    .section { background: white; border-radius: 12px; padding: 32px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    h1 { font-size: 32px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+    h2 { font-size: 24px; font-weight: 600; color: #1e293b; margin-top: 32px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #e2e8f0; }
+    h3 { font-size: 18px; font-weight: 600; color: #334155; margin-top: 24px; margin-bottom: 12px; }
+    h4 { font-size: 16px; font-weight: 600; color: #475569; margin-top: 16px; margin-bottom: 8px; }
+    p { color: #475569; line-height: 1.7; margin-bottom: 12px; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+    th { background: #f8fafc; padding: 12px; text-align: left; font-weight: 600; color: #334155; border-bottom: 2px solid #e2e8f0; }
+    td { padding: 12px; border-bottom: 1px solid #e2e8f0; color: #475569; }
+    tr:hover { background: #f8fafc; }
+    code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #334155; }
+    pre { background: #1e293b; color: #e2e8f0; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; line-height: 1.6; }
+    pre code { background: transparent; padding: 0; color: inherit; }
+    .highlight-box { background: linear-gradient(135deg, #eff6ff, #f0f9ff); border-left: 4px solid #3b82f6; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+    .warning-box { background: linear-gradient(135deg, #fef3c7, #fffbeb); border-left: 4px solid #f59e0b; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+    .success-box { background: linear-gradient(135deg, #d1fae5, #ecfdf5); border-left: 4px solid #10b981; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+    .prototype-embed { border: 2px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin: 16px 0; }
+    .prototype-embed iframe { width: 100%; height: 600px; border: none; }
+    .mermaid { background: white; padding: 20px; border-radius: 8px; }
+    .tag { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+    .tag-p0 { background: #fee2e2; color: #dc2626; }
+    .tag-p1 { background: #fef3c7; color: #d97706; }
+    .tag-p2 { background: #dbeafe; color: #2563eb; }
+    .status-done { color: #10b981; font-weight: 600; }
+    .status-progress { color: #f59e0b; font-weight: 600; }
+    .status-plan { color: #6b7280; }
+    @media print {
+      .toc, .header-bar { display: none; }
+      .main-content { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Table of Contents -->
+  <nav class="toc">
+    <div class="p-4 border-b border-gray-200">
+      <div class="font-bold text-lg text-gray-900">PawMind</div>
+      <div class="text-sm text-gray-500">AI 宠物健康管理</div>
+    </div>
+    <div class="py-2">
+      <a href="#overview" class="toc-h1">产品定位</a>
+      <a href="#architecture" class="toc-h1">一、产品架构总览</a>
+      <a href="#arch-structure" class="toc-h2">1.1 全局结构图</a>
+      <a href="#arch-hierarchy" class="toc-h2">1.2 信息层级</a>
+      <a href="#arch-data" class="toc-h2">1.3 核心数据模型</a>
+      <a href="#users" class="toc-h1">二、用户与场景</a>
+      <a href="#user-persona" class="toc-h2">2.1 用户画像</a>
+      <a href="#user-journey" class="toc-h2">2.2 用户旅程图</a>
+      <a href="#features" class="toc-h1">三、核心功能清单</a>
+      <a href="#feat-health" class="toc-h2">3.1 健康管理</a>
+      <a href="#feat-device" class="toc-h2">3.2 设备管理</a>
+      <a href="#feat-record" class="toc-h2">3.3 健康档案</a>
+      <a href="#feat-vaccine" class="toc-h2">3.4 电子疫苗本</a>
+      <a href="#feat-careai" class="toc-h2">3.5 CareAI</a>
+      <a href="#design" class="toc-h1">四、详细方案设计</a>
+      <a href="#design-health" class="toc-h2">4.1 数据可视化</a>
+      <a href="#design-device" class="toc-h2">4.2 设备绑定</a>
+      <a href="#design-record" class="toc-h2">4.3 多输入方式</a>
+      <a href="#design-vaccine" class="toc-h2">4.4 条形码扫描</a>
+      <a href="#design-careai" class="toc-h2">4.5 CareAI 问答</a>
+      <a href="#design-diagnosis" class="toc-h2">4.6 AI 诊断</a>
+      <a href="#flow" class="toc-h1">五、业务流程图</a>
+      <a href="#exception" class="toc-h1">六、异常与边界</a>
+      <a href="#ai" class="toc-h1">七、AI 能力定位</a>
+      <a href="#principles" class="toc-h1">八、设计原则</a>
+      <a href="#tech" class="toc-h1">九、技术要点</a>
+      <a href="#roadmap" class="toc-h1">十、版本演进</a>
+      <a href="#competitor" class="toc-h1">十一、竞品分析</a>
+    </div>
+  </nav>
+
+  <!-- Header Bar -->
+  <div class="header-bar">
+    <div class="flex items-center gap-4">
+      <span class="text-gray-500 text-sm">PRD 文档</span>
+    </div>
+    <div class="flex items-center gap-4">
+      <select class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+        <option>v2.0 (当前)</option>
+        <option>v1.0</option>
+      </select>
+      <span class="version-badge">v2.0</span>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="content-wrapper" style="padding-top: 80px;">
+      
+      <!-- Product Overview -->
+      <div class="section" id="overview">
+        <h1>PawMind</h1>
+        <p class="text-xl text-gray-600">AI 宠物健康管理平台</p>
+        
+        <div class="highlight-box mt-6">
+          <strong>产品定位：</strong>PawMind 是面向<strong>城市养宠人群</strong>的 AI 宠物健康管理 App，通过智能设备数据采集、健康指标可视化、AI 辅助诊断和健康知识服务，帮助主人全面掌握宠物健康状况，及时发现健康隐患。
+        </div>
+
+        <div class="mt-6">
+          <h4>核心理念</h4>
+          <p class="text-lg font-medium text-blue-600">让 AI 成为宠物的私人健康管家。</p>
+        </div>
+
+        <div class="mt-6">
+          <h4>核心数据流</h4>
+          <pre><code>多渠道健康数据（设备自动上报 / 手动录入 / 拍照扫描）
+  → 数据聚合与指标计算
+  → 健康指标可视化（24h / 7天）
+  → AI 健康分析（异常检测 / 诊断 / 问答）
+  → 主人知情 & 行动（预警 / 报告 / 就医建议）</code></pre>
+        </div>
+      </div>
+
+      <!-- Section 1: Architecture -->
+      <div class="section" id="architecture">
+        <h2>一、产品架构总览</h2>
+        
+        <h3 id="arch-structure">1.1 全局结构图（移动端 App）</h3>
+        <pre><code>┌─ 顶部导航栏 ─────────────────────────────────────────────┐
+│  PawMind Logo      [宠物昵称/切换]      通知铃 🔔  头像   │
+├────────────────────────────────────────────────────────┤
+│                                                        │
+│                    主内容区                             │
+│  ┌─────────────────────────────────────────────────┐  │
+│  │                                                 │  │
+│  │   今日状态卡 / CareAI / 健康指标 / 功能页面       │  │
+│  │                                                 │  │
+│  └─────────────────────────────────────────────────┘  │
+│                                                        │
+├────────────────────────────────────────────────────────┤
+│ 底部 TabBar                                            │
+│  🏠 首页    🩺 CareAI    📊 健康    📸 成长册    👤 我   │
+└────────────────────────────────────────────────────────┘</code></pre>
+
+        <h3 id="arch-hierarchy">1.2 信息层级</h3>
+        <pre><code>用户账号（全局唯一，支持多宠物管理）
+  └ 宠物档案（每只宠物独立档案）
+      ├ 基础信息（品种 / 年龄 / 体重）
+      ├ 绑定设备列表
+      │   └ 设备详情（类型 / 电量 / 网络 / 产品信息）
+      ├ 健康数据
+      │   ├ 实时指标（设备上报：饮水量/饮食量/运动量/睡眠/体温/心率/排便）
+      │   ├ 手动录入（体重/饮食量/饮水量/体温/排便）
+      │   └ 指标可视化（24h / 7天趋势）
+      ├ 健康档案
+      │   ├ 就诊记录（诊断/处方/医嘱）
+      │   └ 日常观察（自由文本/标签）
+      ├ 电子疫苗本
+      │   └ 疫苗记录（条形码扫描 + 接种提醒）
+      ├ CareAI 记录
+      │   ├ 健康问答历史
+      │   ├ AI 诊断报告（口腔/粪便/皮肤/报告/药品）
+      │   └ 每日小知识
+      ├ 成长日记（照片 / 视频 / 里程碑）
+      └ 行为分析（v3.0+）</code></pre>
+
+        <h3 id="arch-data">1.3 核心数据模型</h3>
+        <table>
+          <tr>
+            <th>实体</th>
+            <th>核心字段</th>
+            <th>关联关系</th>
+          </tr>
+          <tr>
+            <td><strong>User</strong></td>
+            <td>id, email, nickname, avatar</td>
+            <td>1:N Pet</td>
+          </tr>
+          <tr>
+            <td><strong>Pet</strong></td>
+            <td>name, species, breed, birthday, weight, avatar</td>
+            <td>1:N Device, HealthMetric, HealthRecord, Vaccination</td>
+          </tr>
+          <tr>
+            <td><strong>Device</strong></td>
+            <td>name, type, status, batteryLevel, networkStatus</td>
+            <td>属于 User & Pet, 1:N HealthMetric</td>
+          </tr>
+          <tr>
+            <td><strong>HealthMetric</strong></td>
+            <td>metricType, value, unit, source, recordedAt</td>
+            <td>属于 Pet, 可能关联 Device</td>
+          </tr>
+          <tr>
+            <td><strong>HealthRecord</strong></td>
+            <td>recordType, content, tags, inputMethod, attachments</td>
+            <td>属于 Pet</td>
+          </tr>
+          <tr>
+            <td><strong>Vaccination</strong></td>
+            <td>vaccineName, barcode, vaccinationDate, nextDueDate</td>
+            <td>属于 Pet</td>
+          </tr>
+          <tr>
+            <td><strong>CareAiSession</strong></td>
+            <td>id, petId, createdAt</td>
+            <td>1:N CareAiMessage</td>
+          </tr>
+          <tr>
+            <td><strong>DiagnosisReport</strong></td>
+            <td>diagnosisType, imageUrl, resultSummary, resultDetail</td>
+            <td>属于 Pet & Session</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Section 2: Users -->
+      <div class="section" id="users">
+        <h2>二、用户与使用场景</h2>
+        
+        <h3 id="user-persona">2.1 典型用户画像</h3>
+        <table>
+          <tr>
+            <th>用户类型</th>
+            <th>特征描述</th>
+            <th>核心需求</th>
+          </tr>
+          <tr>
+            <td><strong>忙碌打工人</strong></td>
+            <td>25-35 岁城市白领，独居养宠，工作日办公室超 10 小时</td>
+            <td>快速了解宠物状态，低门槛陪伴</td>
+          </tr>
+          <tr>
+            <td><strong>健康焦虑型主人</strong></td>
+            <td>对宠物健康高度重视，愿意记录详细数据</td>
+            <td>全面健康追踪，异常预警，就医辅助</td>
+          </tr>
+          <tr>
+            <td><strong>新手宠主</strong></td>
+            <td>刚养宠，不了解宠物行为规律</td>
+            <td>饲养建议，健康知识，AI 辅助诊断</td>
+          </tr>
+          <tr>
+            <td><strong>多设备用户</strong></td>
+            <td>已购买智能喂食器、项圈等硬件</td>
+            <td>设备统一管理，数据自动同步</td>
+          </tr>
+        </table>
+
+        <h3 id="user-journey">2.2 核心用户旅程图</h3>
+        <table>
+          <tr>
+            <th>阶段</th>
+            <th>触点</th>
+            <th>用户行为</th>
+            <th>痛点/情绪</th>
+            <th>功能转化</th>
+          </tr>
+          <tr>
+            <td><strong>1. 发现</strong></td>
+            <td>社交媒体/口碑</td>
+            <td>看到"AI 宠物健康"内容</td>
+            <td>半信半疑</td>
+            <td>用健康报告截图传播，营造社交货币</td>
+          </tr>
+          <tr>
+            <td><strong>2. 注册建档</strong></td>
+            <td>App 首启动</td>
+            <td>填写宠物信息、上传照片</td>
+            <td>流程繁琐</td>
+            <td>3 步建档，AI 生成性格速写</td>
+          </tr>
+          <tr>
+            <td><strong>3. 设备绑定</strong></td>
+            <td>设备管理页</td>
+            <td>购买设备后绑定到 App</td>
+            <td>不知兼容性，绑定复杂</td>
+            <td>展示型商城 + 配对引导</td>
+          </tr>
+          <tr>
+            <td><strong>4. 日常监测</strong></td>
+            <td>健康 Tab</td>
+            <td>每天查看健康指标</td>
+            <td>数据分散，无法一眼看出状态</td>
+            <td>健康指标卡（24h/7天汇总）</td>
+          </tr>
+          <tr>
+            <td><strong>5. 异常处理</strong></td>
+            <td>推送通知</td>
+            <td>收到异常提醒，查看详情</td>
+            <td>不知严重程度，慌乱</td>
+            <td>AI 分级预警 + 就医建议</td>
+          </tr>
+          <tr>
+            <td><strong>6. 健康咨询</strong></td>
+            <td>CareAI</td>
+            <td>发现异常时咨询 AI</td>
+            <td>网上信息杂乱不可靠</td>
+            <td>CareAI 健康知识问答</td>
+          </tr>
+          <tr>
+            <td><strong>7. 成长记录</strong></td>
+            <td>成长册</td>
+            <td>记录精彩瞬间，分享</td>
+            <td>照片散乱，无成就感</td>
+            <td>AI 月度报告，一键分享</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Section 3: Features -->
+      <div class="section" id="features">
+        <h2>三、核心功能清单</h2>
+        
+        <h3 id="feat-health">3.1 健康管理模块（升级）</h3>
+        <table>
+          <tr>
+            <th>功能点</th>
+            <th>描述</th>
+            <th>优先级</th>
+          </tr>
+          <tr>
+            <td>健康指标卡</td>
+            <td>展示 24h/7天核心健康指标汇总，设备驱动显示</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>指标数据可视化</td>
+            <td>各指标的趋势折线图，支持时间范围切换</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>设备驱动显示</td>
+            <td>已绑定设备的指标正常展示，未绑定的显示营销引导卡</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>手动录入指标</td>
+            <td>体重、饮食量、饮水量、体温、排便情况手动录入</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>设备数据接收</td>
+            <td>接收智能设备上报的健康数据（v2.0 Mock）</td>
+            <td><span class="tag tag-p1">P1</span></td>
+          </tr>
+          <tr>
+            <td>异常预警</td>
+            <td>基于指标阈值检测异常并推送</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+        </table>
+
+        <h4>指标与设备映射</h4>
+        <table>
+          <tr>
+            <th>指标</th>
+            <th>数据来源设备</th>
+            <th>手动可录</th>
+          </tr>
+          <tr><td>饮食量</td><td>智能喂食器</td><td>✅</td></tr>
+          <tr><td>饮水量</td><td>智能饮水机</td><td>✅</td></tr>
+          <tr><td>运动量/步数</td><td>智能项圈</td><td>❌</td></tr>
+          <tr><td>睡眠时长</td><td>智能项圈</td><td>❌</td></tr>
+          <tr><td>体温</td><td>智能项圈</td><td>✅</td></tr>
+          <tr><td>心率</td><td>智能项圈</td><td>❌</td></tr>
+          <tr><td>排便情况</td><td>智能猫砂盆</td><td>✅</td></tr>
+          <tr><td>体重</td><td>无（纯手动）</td><td>✅</td></tr>
+        </table>
+
+        <h3 id="feat-device">3.2 设备管理模块（新增）</h3>
+        <table>
+          <tr>
+            <th>功能点</th>
+            <th>描述</th>
+            <th>优先级</th>
+          </tr>
+          <tr>
+            <td>设备列表</td>
+            <td>展示已绑定设备卡片（名称、图标、电量、连接状态）</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>添加/绑定设备</td>
+            <td>选择设备类型 → 配对引导 → 绑定确认</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>设备详情</td>
+            <td>设备名称（可编辑）、绑定时间、电量、网络状态、产品信息</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>删除设备</td>
+            <td>解绑设备，确认弹窗</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>设备商城</td>
+            <td>展示型商城，设备列表 + 参数介绍 + 外部购买链接</td>
+            <td><span class="tag tag-p1">P1</span></td>
+          </tr>
+          <tr>
+            <td>绑定指南</td>
+            <td>图文引导用户完成设备配对</td>
+            <td><span class="tag tag-p1">P1</span></td>
+          </tr>
+        </table>
+
+        <h3 id="feat-record">3.3 健康档案模块（新增）</h3>
+        <table>
+          <tr>
+            <th>功能点</th>
+            <th>描述</th>
+            <th>优先级</th>
+          </tr>
+          <tr>
+            <td>添加就诊记录</td>
+            <td>就诊日期、医院名称、诊断结果、处方用药、医嘱、附件图片</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>添加日常观察</td>
+            <td>记录日期、观察内容（自由文本）、标签</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>多输入方式</td>
+            <td>底部工具栏切换：键盘打字 / OCR 拍照识别 / 语音输入</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>档案时间线</td>
+            <td>按时间倒序展示所有健康档案</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>档案编辑/删除</td>
+            <td>编辑已有记录、删除（确认弹窗）</td>
+            <td><span class="tag tag-p1">P1</span></td>
+          </tr>
+        </table>
+
+        <h3 id="feat-vaccine">3.4 电子疫苗本模块（新增）</h3>
+        <table>
+          <tr>
+            <th>功能点</th>
+            <th>描述</th>
+            <th>优先级</th>
+          </tr>
+          <tr>
+            <td>疫苗列表</td>
+            <td>按时间倒序展示已接种疫苗，待接种疫苗置顶提醒</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>添加疫苗记录</td>
+            <td>扫描条形码 → OCR 预填疫苗名称 → 手动补充信息</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>条形码扫描</td>
+            <td>调用相机扫描疫苗条形码，OCR 识别疫苗名称预填表单</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>接种提醒</td>
+            <td>基于下次接种日期推送本地通知</td>
+            <td><span class="tag tag-p1">P1</span></td>
+          </tr>
+        </table>
+
+        <h3 id="feat-careai">3.5 CareAI 模块（替换原 AI 陪伴）</h3>
+        <table>
+          <tr>
+            <th>功能点</th>
+            <th>描述</th>
+            <th>优先级</th>
+          </tr>
+          <tr>
+            <td>CareAI 主页</td>
+            <td>顶部每日小知识 + 中部 AI 诊断入口宫格 + 底部悬浮问答按钮</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>健康知识问答</td>
+            <td>对话式交互，用户提问宠物健康问题，AI 回复</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>每日小知识</td>
+            <td>固定知识库每日推送一条，按分类组织，可回看历史</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td>AI 诊断 — 口腔/粪便/皮肤/报告/药品</td>
+            <td>拍照引导 → 上传 → Mock 分析结果</td>
+            <td><span class="tag tag-p1">P1</span></td>
+          </tr>
+          <tr>
+            <td>诊断结果保存</td>
+            <td>分析结果可保存到健康档案</td>
+            <td><span class="tag tag-p1">P1</span></td>
+          </tr>
+          <tr>
+            <td>免责声明</td>
+            <td>所有诊断结果页展示「AI 分析仅供参考，不替代专业诊断」</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Section 4: Design -->
+      <div class="section" id="design">
+        <h2>四、详细方案设计</h2>
+        
+        <h3 id="design-health">4.1 健康管理 — 数据可视化</h3>
+        <div class="mermaid">
+flowchart TD
+    A([用户进入健康 Tab]) --> B[加载宠物绑定设备列表]
+    B --> C[查询 24h/7天健康指标数据]
+    C --> D[渲染健康指标卡区域]
+    D --> E{指标是否已激活?}
+    E -- 已激活 --> F[展示数值 + 趋势图]
+    E -- 未激活 --> G[展示营销引导卡]
+    G --> H{用户点击?}
+    H -- 是 --> I[跳转设备商城页]
+    F --> J{用户点击指标卡?}
+    J -- 是 --> K[展开指标详情 + 折线图]
+    K --> L{切换时间范围?}
+    L -- 24h --> M[展示 24 小时数据]
+    L -- 7天 --> N[展示 7 天数据]
+        </div>
+
+        <div class="success-box">
+          <strong>功能规则：</strong>
+          <ul class="mt-2 ml-4">
+            <li>健康指标卡区域位于健康 Tab 顶部，横向滑动展示所有指标</li>
+            <li>已激活指标显示：指标名称、当前值、单位、对比上一周期的变化（↑/↓/持平）</li>
+            <li>点击指标卡展开详情，展示时间范围内的折线趋势图</li>
+            <li>手动可录指标在详情页提供「手动录入」入口</li>
+            <li>未绑定对应设备的指标卡显示为灰色锁定状态</li>
+          </ul>
+        </div>
+
+        <h3 id="design-device">4.2 设备管理 — 绑定流程</h3>
+        <div class="mermaid">
+flowchart TD
+    A([用户进入设备管理]) --> B[展示已绑定设备列表]
+    B --> C{点击操作?}
+    C -- 添加设备 --> D[选择设备类型]
+    C -- 点击设备卡片 --> E[进入设备详情]
+    D --> F[展示配对引导页]
+    F --> G[模拟配对过程 v2.0 Mock]
+    G --> H{配对结果?}
+    H -- 成功 --> I[设备命名 + 绑定宠物]
+    H -- 失败 --> J[展示排错指南]
+    I --> K[返回设备列表，新设备出现]
+    E --> L{操作?}
+    L -- 编辑名称 --> M[修改设备名称]
+    L -- 查看产品信息 --> N[展示设备产品详情]
+    L -- 删除设备 --> O[确认弹窗 → 解绑]
+        </div>
+
+        <h3 id="design-record">4.3 健康档案 — 多输入方式</h3>
+        <div class="mermaid">
+flowchart TD
+    A([用户点击添加健康档案]) --> B{选择档案类型}
+    B -- 就诊记录 --> C[展示就诊记录表单]
+    B -- 日常观察 --> D[展示日常观察表单]
+    C --> E{选择输入方式}
+    D --> E
+    E -- 键盘打字 --> F[默认文本输入]
+    E -- OCR 拍照 --> G[调用相机拍照]
+    E -- 语音输入 --> H[调用麦克风录音]
+    G --> I[OCR 识别文字]
+    I --> J[预填表单字段]
+    H --> K[语音转文字]
+    K --> J
+    F --> L[用户填写/编辑]
+    J --> L
+    L --> M[提交保存]
+    M --> N[返回档案时间线]
+        </div>
+
+        <h3 id="design-vaccine">4.4 电子疫苗本 — 条形码扫描</h3>
+        <div class="mermaid">
+flowchart TD
+    A([用户点击添加疫苗]) --> B[调用相机扫描条形码]
+    B --> C{扫描结果?}
+    C -- 识别成功 --> D[OCR 预填疫苗名称]
+    C -- 识别失败 --> E[提示手动输入]
+    D --> F[展示疫苗信息表单]
+    E --> F
+    F --> G[用户补充接种信息]
+    G --> H[提交保存]
+    H --> I{设置了下次接种日期?}
+    I -- 是 --> J[注册本地通知提醒]
+    I -- 否 --> K[返回疫苗列表]
+    J --> K
+        </div>
+
+        <h3 id="design-careai">4.5 CareAI — 健康知识问答</h3>
+        <div class="mermaid">
+flowchart TD
+    A([用户点击健康问答按钮]) --> B{是否有进行中的会话?}
+    B -- 是 --> C[加载历史消息]
+    B -- 否 --> D[创建新会话]
+    C --> E[展示对话界面]
+    D --> E
+    E --> F[用户输入问题]
+    F --> G[发送至后端]
+    G --> H[返回 Mock AI 回复]
+    H --> I[展示 AI 回复气泡]
+    I --> J{用户操作?}
+    J -- 继续提问 --> F
+    J -- 退出 --> K[返回 CareAI 主页]
+        </div>
+
+        <div class="highlight-box">
+          <strong>功能规则：</strong>
+          <ul class="mt-2 ml-4">
+            <li>对话界面类似聊天 UI，用户消息靠右，AI 回复靠左</li>
+            <li>v2.0 Mock：预置常见宠物健康问题的回答模板，关键词匹配</li>
+            <li>匹配不到时返回「这个问题我还在学习中，建议咨询专业宠医哦」</li>
+            <li>AI 服务层抽象为接口，后续替换真实 AI API 无需修改前端</li>
+            <li>自动携带当前宠物的品种、年龄、体重作为上下文</li>
+          </ul>
+        </div>
+
+        <h3 id="design-diagnosis">4.6 CareAI — AI 诊断</h3>
+        <div class="mermaid">
+flowchart TD
+    A([用户选择诊断类型]) --> B[展示拍照引导页]
+    B --> C{拍照方式?}
+    C -- 拍照 --> D[调用相机]
+    C -- 从相册选择 --> E[打开相册]
+    D --> F[上传图片]
+    E --> F
+    F --> G[展示分析中动画 2-3秒]
+    G --> H[展示 Mock 分析结果]
+    H --> I{用户操作?}
+    I -- 保存到健康档案 --> J[创建健康档案记录]
+    I -- 重新拍照 --> B
+    I -- 返回 --> K[返回 CareAI 主页]
+        </div>
+
+        <h4>各诊断类型差异</h4>
+        <table>
+          <tr>
+            <th>诊断类型</th>
+            <th>拍照引导</th>
+            <th>Mock 结果示例</th>
+          </tr>
+          <tr>
+            <td>口腔检查</td>
+            <td>示例图引导拍摄口腔内部</td>
+            <td>口腔健康评分 85/100，牙齿状况良好，建议定期洁牙</td>
+          </tr>
+          <tr>
+            <td>粪便检查</td>
+            <td>引导拍摄粪便全貌</td>
+            <td>形态正常（布里斯托 4 型），颜色正常，未见异常</td>
+          </tr>
+          <tr>
+            <td>皮肤检查</td>
+            <td>引导拍摄皮肤患处</td>
+            <td>皮肤状况评估：轻微发红，建议观察 3 天，如持续请就医</td>
+          </tr>
+          <tr>
+            <td>报告解读</td>
+            <td>引导拍摄检验报告</td>
+            <td>检测到 5 项指标，其中 2 项偏高（标注），建议咨询宠医</td>
+          </tr>
+          <tr>
+            <td>药品识别</td>
+            <td>引导拍摄药品包装/说明书</td>
+            <td>药品名称、主要成分、宠物用药注意事项</td>
+          </tr>
+        </table>
+
+        <div class="warning-box">
+          <strong>免责声明：</strong>所有诊断结果页底部固定展示：「⚠️ AI 分析仅供参考，不替代专业兽医诊断。如有疑虑，请及时就医。」
+        </div>
+      </div>
+
+      <!-- Section 5: Flow -->
+      <div class="section" id="flow">
+        <h2>五、业务流程图</h2>
+        
+        <h3>主链路：健康异常检测 → 主人处理</h3>
+        <div class="mermaid">
+sequenceDiagram
+    participant 主人
+    participant App
+    participant AI引擎
+    participant 智能设备
+    participant 宠医平台
+
+    主人->>App: 1. 录入宠物今日体重异常
+    App->>AI引擎: 2. 上传健康数据请求分析
+    AI引擎-->>App: 3. 返回分析结果（注意级别：体重下降 8%）
+    App-->>主人: 4. 推送通知"毛球今天比上周轻了 8%，建议关注饮食"
+    主人->>App: 5. 点击通知查看预警详情
+    App-->>主人: 6. 展示预警卡片 + AI 建议
+    主人->>App: 7. 点击"联系宠医"
+    App->>宠医平台: 8. 跳转在线问诊
+    宠医平台-->>主人: 9. 宠医接诊，给出专业建议
+    主人->>App: 10. 记录就医结果，标记预警已处理
+    App->>AI引擎: 11. 更新健康基线数据
+        </div>
+      </div>
+
+      <!-- Section 6: Exception -->
+      <div class="section" id="exception">
+        <h2>六、异常与边界处理</h2>
+        <table>
+          <tr>
+            <th>异常场景</th>
+            <th>系统处理 / 提示文案</th>
+          </tr>
+          <tr>
+            <td><strong>网络断开（AI 对话中）</strong></td>
+            <td>Toast："网络开小差了，消息已暂存，恢复后自动发送"</td>
+          </tr>
+          <tr>
+            <td><strong>宠物档案为空（首次使用）</strong></td>
+            <td>全屏引导页：宠物插画 + "先来认识一下你的宠物吧～" + [开始建档] 按钮</td>
+          </tr>
+          <tr>
+            <td><strong>健康数据为空</strong></td>
+            <td>展示插画 + "还没有记录，今天就开始吧" + [记录今日健康] 按钮</td>
+          </tr>
+          <tr>
+            <td><strong>AI 响应超时（>5s）</strong></td>
+            <td>提示："宠物有点忙，稍后再试" + 重试按钮</td>
+          </tr>
+          <tr>
+            <td><strong>设备离线</strong></td>
+            <td>设备图标变灰 + 说明"设备暂时离线，请检查电源/网络"</td>
+          </tr>
+          <tr>
+            <td><strong>设备配对失败</strong></td>
+            <td>展示排错指南：检查设备电源 / 蓝牙开启 / 距离等</td>
+          </tr>
+          <tr>
+            <td><strong>条形码识别失败</strong></td>
+            <td>提示"未能识别条形码，请手动输入疫苗名称"</td>
+          </tr>
+          <tr>
+            <td><strong>OCR 识别不准确</strong></td>
+            <td>预填结果可编辑，提示"识别结果仅供参考，请确认后提交"</td>
+          </tr>
+          <tr>
+            <td><strong>相册权限未授权</strong></td>
+            <td>弹窗引导："需要相册权限才能记录成长瞬间" + [去授权] 按钮</td>
+          </tr>
+          <tr>
+            <td><strong>通知权限未授权</strong></td>
+            <td>进入首页时 Banner 提示："开启通知，第一时间收到宠物状态提醒"</td>
+          </tr>
+          <tr>
+            <td><strong>疫苗提醒时间已过</strong></td>
+            <td>疫苗列表标记"已过期未接种"，红色高亮提醒</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Section 7: AI -->
+      <div class="section" id="ai">
+        <h2>七、AI 能力定位</h2>
+        <table>
+          <tr>
+            <th>触点</th>
+            <th>能力</th>
+            <th>v2.0 实现</th>
+            <th>预留扩展</th>
+          </tr>
+          <tr>
+            <td><strong>健康知识问答</strong><br><small>对话级</small></td>
+            <td>回答宠物健康相关问题，提供护理建议</td>
+            <td>Mock 回复，预置知识库关键词匹配</td>
+            <td>AI API 接口，接入大语言模型</td>
+          </tr>
+          <tr>
+            <td><strong>AI 拍照诊断</strong><br><small>功能级</small></td>
+            <td>分析口腔/粪便/皮肤照片，解读报告，识别药品</td>
+            <td>Mock 分析结果，UI 和流程完整</td>
+            <td>多模态 AI API 接口</td>
+          </tr>
+          <tr>
+            <td><strong>健康异常检测</strong><br><small>模块级</small></td>
+            <td>检测体征异常、判断严重程度、给出行动建议</td>
+            <td>规则引擎 + 阈值判断</td>
+            <td>时序异常检测模型</td>
+          </tr>
+          <tr>
+            <td><strong>成长报告生成</strong><br><small>对象级</small></td>
+            <td>读取月度数据，生成有温度的图文总结</td>
+            <td>模板 + 规则生成</td>
+            <td>大模型生成文案</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Section 8: Principles -->
+      <div class="section" id="principles">
+        <h2>八、设计原则</h2>
+        <table>
+          <tr>
+            <th>原则</th>
+            <th>说明</th>
+          </tr>
+          <tr>
+            <td><strong>数据驱动决策</strong></td>
+            <td>健康指标给出明确的正常/异常判断和行动建议，不让用户自己解读原始数据</td>
+          </tr>
+          <tr>
+            <td><strong>设备即服务</strong></td>
+            <td>未绑定设备 = 营销机会，用「解锁功能」的方式引导用户购买设备</td>
+          </tr>
+          <tr>
+            <td><strong>AI 透明可信</strong></td>
+            <td>所有 AI 分析结果附带免责声明和数据来源说明，不过度承诺 AI 能力</td>
+          </tr>
+          <tr>
+            <td><strong>输入零门槛</strong></td>
+            <td>提供多种输入方式（打字/OCR/语音/扫码），降低记录门槛</td>
+          </tr>
+          <tr>
+            <td><strong>情感优先于功能</strong></td>
+            <td>当功能和情感体验冲突时，优先保证情感连接感</td>
+          </tr>
+          <tr>
+            <td><strong>降级而非崩溃</strong></td>
+            <td>AI 失败时保留基础功能；不因 AI 服务不可用让 App 无法使用</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Section 9: Tech -->
+      <div class="section" id="tech">
+        <h2>九、技术要点</h2>
+        <table>
+          <tr>
+            <th>层级</th>
+            <th>技术选型</th>
+          </tr>
+          <tr>
+            <td><strong>移动端</strong></td>
+            <td>React Native + Expo</td>
+          </tr>
+          <tr>
+            <td><strong>状态管理</strong></td>
+            <td>Zustand</td>
+          </tr>
+          <tr>
+            <td><strong>后端</strong></td>
+            <td>NestJS + TypeORM</td>
+          </tr>
+          <tr>
+            <td><strong>数据库</strong></td>
+            <td>PostgreSQL</td>
+          </tr>
+          <tr>
+            <td><strong>AI 服务</strong></td>
+            <td>GPT-4o / 混元（预留接口）</td>
+          </tr>
+          <tr>
+            <td><strong>推送通知</strong></td>
+            <td>iOS APNs + Android FCM</td>
+          </tr>
+          <tr>
+            <td><strong>图片存储</strong></td>
+            <td>CDN + OSS</td>
+          </tr>
+          <tr>
+            <td><strong>设备联动</strong></td>
+            <td>MQTT 协议</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Section 10: Roadmap -->
+      <div class="section" id="roadmap">
+        <h2>十、版本演进规划</h2>
+        <table>
+          <tr>
+            <th>版本</th>
+            <th>目标</th>
+            <th>状态</th>
+          </tr>
+          <tr>
+            <td><strong>v1.0 MVP</strong></td>
+            <td>建档 → AI 对话 → 健康录入 → 成长记录，验证 AI 陪伴情感价值</td>
+            <td class="status-done">已完成</td>
+          </tr>
+          <tr>
+            <td><strong>v2.0 AI 健康管理</strong></td>
+            <td>健康管理升级（多渠道数据 + 可视化 + 设备 + 疫苗本 + 档案）+ CareAI（问答 + 诊断）</td>
+            <td class="status-progress">开发中</td>
+          </tr>
+          <tr>
+            <td><strong>v3.0</strong></td>
+            <td>宠物社区 + AI 行为分析 + 多人共养 / 宠物交友</td>
+            <td class="status-plan">规划中</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Section 11: Competitor -->
+      <div class="section" id="competitor">
+        <h2>十一、竞品对比与差异化亮点</h2>
+        
+        <h3>竞品格局</h3>
+        <table>
+          <tr>
+            <th>产品</th>
+            <th>定位</th>
+            <th>强项</th>
+            <th>弱项</th>
+          </tr>
+          <tr>
+            <td><strong>宠物说</strong></td>
+            <td>宠物社区 + 健康</td>
+            <td>社区活跃度高，内容丰富</td>
+            <td>AI 功能薄弱，陪伴感不强</td>
+          </tr>
+          <tr>
+            <td><strong>爱宠助手</strong></td>
+            <td>健康记录工具</td>
+            <td>功能全，数据详细</td>
+            <td>交互冷、无情感连接</td>
+          </tr>
+          <tr>
+            <td><strong>AI 宠物陪伴智能设备</strong></td>
+            <td>硬件 + 互动</td>
+            <td>实体互动感强</td>
+            <td>硬件门槛高，软件弱</td>
+          </tr>
+        </table>
+
+        <h3>差异化亮点</h3>
+        
+        <div class="highlight-box">
+          <h4>亮点一：AI 健康管家，数据驱动决策</h4>
+          <p>现有产品的健康功能停留在数据记录层面，主人填了数据，App 画个图表，然后就没了。遇到异常主人仍然不知道该怎么办。</p>
+          <ul class="mt-2 ml-4">
+            <li>AI 给出行动建议（观察/饮食调整/立即就医），不让主人自己判断</li>
+            <li>预警直连宠医问诊，从发现问题到获得建议一步到位</li>
+            <li>历史预警可回溯，帮助宠医了解宠物历史健康情况</li>
+          </ul>
+        </div>
+
+        <div class="success-box">
+          <h4>亮点二：设备即服务，软硬一体化</h4>
+          <p>未绑定设备 = 营销机会，用「解锁功能」的方式引导用户购买设备</p>
+          <ul class="mt-2 ml-4">
+            <li>健康指标卡与设备深度绑定，已绑定展示数据，未绑定展示引导</li>
+            <li>一站式设备管理和数据查看</li>
+            <li>设备商城直接导流购买</li>
+          </ul>
+        </div>
+
+        <div class="highlight-box">
+          <h4>亮点三：输入零门槛，多模态记录</h4>
+          <p>提供多种输入方式（打字/OCR/语音/扫码），降低记录门槛</p>
+          <ul class="mt-2 ml-4">
+            <li>就诊记录支持 OCR 拍照识别、语音输入</li>
+            <li>疫苗本支持条形码扫描</li>
+            <li>所有记录方式都追求「3 秒内完成」</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="section text-center text-gray-500 text-sm">
+        <p>文档版本：v2.0 | 更新日期：2026-04-14</p>
+        <p>更新内容：整合 v1.0 和 v2.0 产品信息，按照 fullstack-product-dev 技能标准格式重新输出</p>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // Initialize Mermaid
+    mermaid.initialize({ 
+      startOnLoad: true,
+      theme: 'default',
+      flowchart: { useMaxWidth: true, htmlLabels: true },
+      sequence: { useMaxWidth: true }
+    });
+
+    // TOC Active State
+    const sections = document.querySelectorAll('h1[id], h2[id], h3[id]');
+    const tocLinks = document.querySelectorAll('.toc a');
+
+    function updateActiveLink() {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        if (scrollY >= sectionTop - 100) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      tocLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) {
+          link.classList.add('active');
+        }
+      });
+    }
+
+    window.addEventListener('scroll', updateActiveLink);
+    updateActiveLink();
+  </script>
+</body>
+</html>
