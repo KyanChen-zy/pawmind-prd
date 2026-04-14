@@ -1,4 +1,6 @@
-# PawMind — AI 宠物健康管理平台
+# PawMind — AI 宠物健康管理平台 PRD
+
+🐾  https://kyanchen-zy.github.io/pawmind-prd/PawMind-PRD-v2.0.html
 
 > 让 AI 成为宠物的私人健康管家
 
