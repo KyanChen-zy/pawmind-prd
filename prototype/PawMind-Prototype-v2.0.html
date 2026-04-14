@@ -686,18 +686,31 @@
   </div>
 
   <script>
-    // Navigation
+    // URL Hash Routing
     function navigate(pageId) {
+      window.location.hash = pageId;
+    }
+
+    function showPage(pageId) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      document.getElementById(pageId).classList.add('active');
+      const targetPage = document.getElementById(pageId);
+      if (targetPage) {
+        targetPage.classList.add('active');
+      }
+      
+      // Update tab active state
+      document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+      const tabMap = {
+        'home': 0, 'careai': 1, 'chat': 1, 'health': 2, 
+        'addRecord': 2, 'vaccine': 2, 'device': 2, 'growth': 3, 'profile': 4
+      };
+      const tabIndex = tabMap[pageId];
+      if (tabIndex !== undefined) {
+        document.querySelectorAll('.tab-item')[tabIndex].classList.add('active');
+      }
     }
 
     function switchTab(tabName) {
-      // Update tab active state
-      document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-      event.currentTarget.classList.add('active');
-      
-      // Navigate to page
       navigate(tabName);
     }
 
@@ -710,14 +723,53 @@
       }, 2000);
     }
 
+    // Handle hash change
+    function handleHashChange() {
+      const hash = window.location.hash.slice(1) || 'home';
+      showPage(hash);
+    }
+
+    window.addEventListener('hashchange', handleHashChange);
+
     // Focus mode from URL params
     const params = new URLSearchParams(window.location.search);
     const focus = params.get('focus');
-    if (focus) {
+    const sandbox = params.get('sandbox');
+    
+    if (focus || sandbox) {
       document.body.classList.add('focus-mode');
-      // Lock non-focused areas based on focus parameter
-      console.log('Focus mode:', focus);
+      
+      // Apply focus-specific styling
+      const focusMap = {
+        'health-data': ['health'],
+        'device-bind': ['device'],
+        'health-record': ['addRecord'],
+        'vaccine-scan': ['vaccine'],
+        'careai-chat': ['careai', 'chat'],
+        'ai-diagnosis': ['careai'],
+        'home': ['home'],
+        'growth': ['growth']
+      };
+      
+      const allowedPages = focusMap[focus] || [];
+      
+      // Lock non-focused pages
+      document.querySelectorAll('.page').forEach(page => {
+        if (!allowedPages.includes(page.id)) {
+          page.classList.add('non-focused');
+        }
+      });
+      
+      // Lock tab bar in focus mode
+      if (focus && focus !== 'home') {
+        document.querySelector('.tab-bar').classList.add('non-focused');
+      }
+      
+      console.log('Focus mode:', focus, 'Sandbox:', sandbox);
     }
+
+    // Initialize on load
+    handleHashChange();
   </script>
 </body>
 </html>

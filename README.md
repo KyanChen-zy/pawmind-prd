@@ -147,6 +147,12 @@ pawmind-prd/
 
 ---
 
+## 项目仓库
+
+https://github.com/KyanChen-zy/PawMind.git
+
+---
+
 ## 许可证
 
 本项目为私有产品文档，版权所有。未经授权不得复制、分发或用于商业用途。

@@ -11,15 +11,81 @@
     * { font-family: 'Inter', 'Noto Sans SC', sans-serif; }
     html { scroll-behavior: smooth; }
     body { background: #f8fafc; }
-    .toc { position: fixed; left: 0; top: 0; width: 280px; height: 100vh; background: white; border-right: 1px solid #e2e8f0; overflow-y: auto; z-index: 50; }
+    .toc { position: fixed; left: 0; top: 0; width: 260px; height: 100vh; background: white; border-right: 1px solid #e2e8f0; overflow-y: auto; z-index: 50; }
     .toc a { display: block; padding: 8px 16px; color: #64748b; text-decoration: none; font-size: 14px; border-left: 3px solid transparent; transition: all 0.2s; }
     .toc a:hover { background: #f1f5f9; color: #0f172a; border-left-color: #3b82f6; }
     .toc a.active { background: #eff6ff; color: #1d4ed8; border-left-color: #3b82f6; font-weight: 500; }
     .toc .toc-h1 { padding-left: 16px; font-weight: 600; }
     .toc .toc-h2 { padding-left: 32px; }
     .toc .toc-h3 { padding-left: 48px; font-size: 13px; }
-    .main-content { margin-left: 280px; min-height: 100vh; }
-    .content-wrapper { max-width: 900px; margin: 0 auto; padding: 40px 32px; }
+    .main-content { margin-left: 260px; margin-right: 420px; min-height: 100vh; }
+    .content-wrapper { max-width: 100%; margin: 0; padding: 40px 32px; }
+    
+    /* Right Sidebar - Prototype Panel */
+    .right-sidebar { 
+      position: fixed; 
+      right: 0; 
+      top: 0; 
+      width: 420px; 
+      height: 100vh; 
+      background: #f8fafc; 
+      border-left: 1px solid #e2e8f0; 
+      overflow-y: auto; 
+      z-index: 50; 
+      padding: 16px;
+    }
+    .right-sidebar-header {
+      padding: 12px;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 16px;
+    }
+    .right-sidebar-header h3 {
+      margin: 0;
+      font-size: 16px;
+      color: #1e293b;
+    }
+    .right-sidebar .device-frame { 
+      transform: scale(0.85); 
+      transform-origin: top center;
+      margin: 0 auto;
+      display: block;
+    }
+    .right-sidebar .device-frame-inner { 
+      width: 375px; 
+      height: 700px; 
+    }
+    .right-sidebar .desktop-frame { 
+      height: 500px; 
+    }
+    .right-sidebar .feature-nav-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .right-sidebar .feature-nav-grid button {
+      padding: 10px 8px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      font-size: 12px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .right-sidebar .feature-nav-grid button:hover {
+      background: #f1f5f9;
+      border-color: #3b82f6;
+    }
+    .right-sidebar .feature-nav-grid button strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+    .right-sidebar .feature-nav-grid button span {
+      font-size: 11px;
+      color: #64748b;
+    }
     .header-bar { position: fixed; top: 0; left: 280px; right: 0; height: 60px; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #e2e8f0; z-index: 40; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; }
     .version-badge { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; }
     .section { background: white; border-radius: 12px; padding: 32px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
@@ -41,6 +107,96 @@
     .prototype-embed { border: 2px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin: 16px 0; }
     .prototype-embed iframe { width: 100%; height: 600px; border: none; }
     .mermaid { background: white; padding: 20px; border-radius: 8px; }
+    
+    /* Device Frame Styles */
+    .device-frame { 
+      position: relative; 
+      background: #1f2937; 
+      border-radius: 40px; 
+      padding: 12px; 
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      display: inline-block;
+    }
+    .device-frame-inner { 
+      width: 375px; 
+      height: 812px; 
+      background: white; 
+      border-radius: 28px; 
+      overflow: hidden;
+    }
+    .device-frame iframe { 
+      width: 100%; 
+      height: 100%; 
+      border: none; 
+    }
+    
+    /* Device Switcher */
+    .device-switcher { 
+      display: flex; 
+      gap: 8px; 
+      margin-bottom: 16px; 
+    }
+    .device-switcher button { 
+      padding: 8px 16px; 
+      border-radius: 8px; 
+      border: 1px solid #e2e8f0; 
+      background: white; 
+      cursor: pointer; 
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .device-switcher button:hover { 
+      background: #f8fafc; 
+    }
+    .device-switcher button.active { 
+      background: #3b82f6; 
+      color: white; 
+      border-color: #3b82f6;
+    }
+    
+    /* Desktop Frame */
+    .desktop-frame { 
+      width: 100%; 
+      height: 600px; 
+      border: 1px solid #e2e8f0; 
+      border-radius: 8px; 
+      overflow: hidden;
+      background: white;
+    }
+    .desktop-frame iframe { 
+      width: 100%; 
+      height: 100%; 
+      border: none; 
+    }
+    
+    /* Feature Module */
+    .feature-module { 
+      background: white; 
+      border-radius: 12px; 
+      padding: 24px; 
+      margin-bottom: 24px; 
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .feature-header { 
+      margin-bottom: 20px; 
+      padding-bottom: 12px; 
+      border-bottom: 2px solid #e2e8f0;
+    }
+    .feature-content { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 24px; 
+    }
+    @media (max-width: 1024px) { 
+      .feature-content { 
+        grid-template-columns: 1fr; 
+      } 
+    }
+    .prototype-section { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center;
+    }
     .tag { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
     .tag-p0 { background: #fee2e2; color: #dc2626; }
     .tag-p1 { background: #fef3c7; color: #d97706; }
@@ -49,8 +205,12 @@
     .status-progress { color: #f59e0b; font-weight: 600; }
     .status-plan { color: #6b7280; }
     @media print {
-      .toc, .header-bar { display: none; }
-      .main-content { margin-left: 0; }
+      .toc, .header-bar, .right-sidebar { display: none; }
+      .main-content { margin-left: 0; margin-right: 0; }
+    }
+    @media (max-width: 1400px) {
+      .right-sidebar { display: none; }
+      .main-content { margin-right: 0; }
     }
   </style>
 </head>
@@ -93,8 +253,98 @@
     </div>
   </nav>
 
+  <!-- Right Sidebar - Prototype Preview -->
+  <aside class="right-sidebar">
+    <div class="right-sidebar-header">
+      <h3>🎨 交互原型预览</h3>
+      <p style="font-size: 12px; color: #64748b; margin-top: 4px;">支持 Focus 模式，锁定非相关区域</p>
+    </div>
+    
+    <div class="device-switcher" style="justify-content: center;">
+      <button class="active" onclick="switchDevice('mobile')">📱 移动端</button>
+      <button onclick="switchDevice('desktop')">💻 桌面端</button>
+    </div>
+
+    <!-- Mobile Frame -->
+    <div id="mobile-frame" class="prototype-section">
+      <div class="device-frame">
+        <div class="device-frame-inner">
+          <iframe id="mobile-iframe" src="../prototype/PawMind-Prototype-v2.0.html#home" title="PawMind Mobile Prototype"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop Frame (hidden by default) -->
+    <div id="desktop-frame" class="prototype-section" style="display: none;">
+      <div class="desktop-frame">
+        <iframe id="desktop-iframe" src="../prototype/PawMind-Prototype-v2.0.html#home" title="PawMind Desktop Prototype"></iframe>
+      </div>
+    </div>
+
+    <div class="feature-nav-grid">
+      <button onclick="loadPrototype('home')">
+        <strong>🏠 首页</strong>
+        <span>今日状态</span>
+      </button>
+      <button onclick="loadPrototype('health')">
+        <strong>🏥 健康</strong>
+        <span>指标 + 趋势</span>
+      </button>
+      <button onclick="loadPrototype('device')">
+        <strong>📟 设备</strong>
+        <span>绑定管理</span>
+      </button>
+      <button onclick="loadPrototype('careai')">
+        <strong>🤖 CareAI</strong>
+        <span>AI 诊断</span>
+      </button>
+      <button onclick="loadPrototype('vaccine')">
+        <strong>💉 疫苗</strong>
+        <span>扫描记录</span>
+      </button>
+      <button onclick="loadPrototype('growth')">
+        <strong>📖 成长</strong>
+        <span>月度报告</span>
+      </button>
+    </div>
+
+    <script>
+      function switchDevice(device) {
+        document.querySelectorAll('.device-switcher button').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        if (device === 'mobile') {
+          document.getElementById('mobile-frame').style.display = 'flex';
+          document.getElementById('desktop-frame').style.display = 'none';
+        } else {
+          document.getElementById('mobile-frame').style.display = 'none';
+          document.getElementById('desktop-frame').style.display = 'block';
+        }
+      }
+      
+      function loadPrototype(page) {
+        const mobileIframe = document.getElementById('mobile-iframe');
+        const desktopIframe = document.getElementById('desktop-iframe');
+        const baseUrl = '../prototype/PawMind-Prototype-v2.0.html';
+        
+        const pageMap = {
+          'health': 'health',
+          'device': 'device',
+          'careai': 'careai',
+          'vaccine': 'vaccine',
+          'growth': 'growth',
+          'home': 'home'
+        };
+        
+        const hash = pageMap[page] || 'home';
+        mobileIframe.src = `${baseUrl}#${hash}`;
+        desktopIframe.src = `${baseUrl}#${hash}`;
+      }
+    </script>
+  </aside>
+
   <!-- Header Bar -->
-  <div class="header-bar">
+  <div class="header-bar" style="right: 420px;">
     <div class="flex items-center gap-4">
       <span class="text-gray-500 text-sm">PRD 文档</span>
     </div>
