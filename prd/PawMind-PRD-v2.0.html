@@ -249,6 +249,7 @@
       <a href="#principles" class="toc-h1">八、设计原则</a>
       <a href="#tech" class="toc-h1">九、技术要点</a>
       <a href="#roadmap" class="toc-h1">十、版本演进</a>
+
     </div>
   </nav>
 
@@ -268,7 +269,7 @@
     <div id="mobile-frame" class="prototype-section">
       <div class="device-frame">
         <div class="device-frame-inner">
-          <iframe id="mobile-iframe" src="../prototype/PawMind-Prototype-v2.0.html#home" title="PawMind Mobile Prototype"></iframe>
+          <iframe id="mobile-iframe" src="./pawmind-output/prototype/PawMind-Prototype-v2.0.html#home" title="PawMind Mobile Prototype"></iframe>
         </div>
       </div>
     </div>
@@ -276,7 +277,7 @@
     <!-- Desktop Frame (hidden by default) -->
     <div id="desktop-frame" class="prototype-section" style="display: none;">
       <div class="desktop-frame">
-        <iframe id="desktop-iframe" src="../prototype/PawMind-Prototype-v2.0.html#home" title="PawMind Desktop Prototype"></iframe>
+        <iframe id="desktop-iframe" src="./pawmind-output/prototype/PawMind-Prototype-v2.0.html#home" title="PawMind Desktop Prototype"></iframe>
       </div>
     </div>
 
@@ -324,7 +325,7 @@
       function loadPrototype(page) {
         const mobileIframe = document.getElementById('mobile-iframe');
         const desktopIframe = document.getElementById('desktop-iframe');
-        const baseUrl = '../prototype/PawMind-Prototype-v2.0.html';
+        const baseUrl = './pawmind-output/prototype/PawMind-Prototype-v2.0.html';
         
         const pageMap = {
           'health': 'health',
@@ -344,13 +345,14 @@
 
   <!-- Header Bar -->
   <div class="header-bar" style="right: 420px;">
-    <div class="flex items-center gap-4">
-      <span class="text-gray-500 text-sm">PRD 文档</span>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-weight: 700; color: #1e293b;">PawMind</span>
+      <span style="font-size: 13px; color: #94a3b8;">PRD 文档</span>
     </div>
-    <div class="flex items-center gap-4">
-      <select class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
-        <option>v2.0 (当前)</option>
-        <option>v1.0</option>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <select id="version-switcher" onchange="switchVersion(this.value)" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 5px 10px; font-size: 13px; background: white; cursor: pointer;">
+        <option value="v2.0" selected>v2.0 (当前)</option>
+        <option value="v2.1">v2.1 (MoE CareAI)</option>
       </select>
       <span class="version-badge">v2.0</span>
     </div>
@@ -1212,6 +1214,105 @@ sequenceDiagram
 
     window.addEventListener('scroll', updateActiveLink);
     updateActiveLink();
+  </script>
+
+  <!-- Version Switcher: Position-Sync Logic -->
+  <script>
+    /**
+     * 版本 anchor 映射表
+     * key = 当前版本 (v2.0) 的 anchor
+     * value = 目标版本 (v2.1) 对应的 anchor
+     */
+    const ANCHOR_MAP_v20_TO_v21 = {
+      // 基础信息
+      'overview':    'overview',
+      // 产品架构
+      'architecture':   'architecture',
+      'arch-structure': 'arch-structure',
+      'arch-hierarchy': 'arch-hierarchy',
+      'arch-data':      'arch-data',
+      // 用户分析
+      'users':        'users',
+      'user-persona': 'user-persona',
+      'user-journey': 'user-journey',
+      // 功能清单（v2.0 三 → v2.1 四）
+      'features':    'features',
+      'feat-health': 'feat-health',
+      'feat-device': 'feat-device',
+      'feat-record': 'feat-record',
+      'feat-vaccine':'feat-vaccine',
+      'feat-careai': 'feat-careai',
+      // 详细设计（v2.0 四 → v2.1 五）
+      'design':            'design',
+      'design-health':     'design-health',
+      'design-device':     'design-device',
+      'design-record':     'design-record',
+      'design-vaccine':    'design-vaccine',
+      'design-careai':     'design-careai-chat',  // v2.0 CareAI → v2.1 MoE 详设
+      'design-diagnosis':  'design-diagnosis',
+      // 流程与异常
+      'flow':      'flow',
+      'exception': 'exception',
+      // AI 能力
+      'ai': 'ai',
+      // 战略
+      'competitor': null,
+      'principles': 'principles',
+      'tech':       'tech',
+      'roadmap':    'roadmap',
+    };
+
+    /**
+     * 获取当前视口内最靠近顶部的 anchor
+     */
+    function getCurrentAnchor() {
+      const allAnchors = document.querySelectorAll('[id]');
+      let best = null;
+      let bestDist = Infinity;
+      const viewportMid = window.scrollY + 160;
+
+      allAnchors.forEach(el => {
+        const top = el.offsetTop;
+        if (top <= viewportMid) {
+          const dist = viewportMid - top;
+          if (dist < bestDist) {
+            bestDist = dist;
+            best = el.id;
+          }
+        }
+      });
+      return best;
+    }
+
+    /**
+     * 版本切换：跳转到目标版本并携带对应 anchor
+     */
+    function switchVersion(targetVersion) {
+      if (targetVersion === 'v2.0') return; // 当前版本
+
+      const currentAnchor = getCurrentAnchor();
+      let targetAnchor = '';
+
+      if (currentAnchor && ANCHOR_MAP_v20_TO_v21[currentAnchor]) {
+        targetAnchor = '#' + ANCHOR_MAP_v20_TO_v21[currentAnchor];
+      } else if (currentAnchor) {
+        targetAnchor = '#' + currentAnchor;
+      }
+
+      location.href = 'PawMind-PRD-' + targetVersion + '.html' + targetAnchor;
+    }
+
+    // 页面加载时若携带 hash，平滑滚动到对应位置
+    (function () {
+      if (location.hash) {
+        const el = document.querySelector(location.hash);
+        if (el) {
+          setTimeout(() => {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 200);
+        }
+      }
+    })();
   </script>
 </body>
 </html>

@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PawMind — AI 宠物健康管理平台 | PRD v2.1</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', 'Noto Sans SC', sans-serif; }
+    html { scroll-behavior: smooth; }
+    body { background: #f8fafc; }
+
+    /* TOC */
+    .toc { position: fixed; left: 0; top: 0; width: 260px; height: 100vh; background: white; border-right: 1px solid #e2e8f0; overflow-y: auto; z-index: 50; }
+    .toc a { display: block; padding: 7px 16px; color: #64748b; text-decoration: none; font-size: 13px; border-left: 3px solid transparent; transition: all 0.2s; }
+    .toc a:hover { background: #f1f5f9; color: #0f172a; border-left-color: #3b82f6; }
+    .toc a.active { background: #eff6ff; color: #1d4ed8; border-left-color: #3b82f6; font-weight: 500; }
+    .toc .toc-h1 { padding-left: 16px; font-weight: 600; font-size: 13px; }
+    .toc .toc-h2 { padding-left: 30px; font-size: 12px; }
+    .toc .toc-h3 { padding-left: 44px; font-size: 11px; }
+    .toc-group-label { padding: 10px 16px 4px; font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    /* Layout */
+    .main-content { margin-left: 260px; margin-right: 420px; min-height: 100vh; }
+    .content-wrapper { max-width: 100%; margin: 0; padding: 40px 32px; }
+
+    /* Right Sidebar */
+    .right-sidebar {
+      position: fixed; right: 0; top: 0; width: 420px; height: 100vh;
+      background: #f8fafc; border-left: 1px solid #e2e8f0;
+      overflow-y: auto; z-index: 50; padding: 16px;
+    }
+    .right-sidebar-header { padding: 12px; border-bottom: 2px solid #e2e8f0; margin-bottom: 16px; }
+    .right-sidebar-header h3 { margin: 0; font-size: 16px; color: #1e293b; }
+
+    /* Header Bar */
+    .header-bar {
+      position: fixed; top: 0; left: 260px; right: 420px; height: 58px;
+      background: rgba(255,255,255,0.96); backdrop-filter: blur(10px);
+      border-bottom: 1px solid #e2e8f0; z-index: 40;
+      display: flex; align-items: center; justify-content: space-between; padding: 0 28px;
+    }
+    .version-badge { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; padding: 5px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+    .version-new-badge { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px; }
+
+    /* Content */
+    .section { background: white; border-radius: 12px; padding: 32px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    h1 { font-size: 30px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+    h2 { font-size: 22px; font-weight: 600; color: #1e293b; margin-top: 28px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid #e2e8f0; }
+    h3 { font-size: 17px; font-weight: 600; color: #334155; margin-top: 22px; margin-bottom: 10px; }
+    h4 { font-size: 15px; font-weight: 600; color: #475569; margin-top: 14px; margin-bottom: 8px; }
+    p { color: #475569; line-height: 1.7; margin-bottom: 12px; }
+    ul { margin: 8px 0; padding-left: 20px; }
+    ul li { color: #475569; line-height: 1.7; margin-bottom: 4px; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14px; }
+    th { background: #f8fafc; padding: 10px 12px; text-align: left; font-weight: 600; color: #334155; border-bottom: 2px solid #e2e8f0; }
+    td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #475569; vertical-align: top; }
+    tr:hover td { background: #fafafa; }
+    code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 12px; color: #334155; font-family: 'JetBrains Mono', 'Fira Code', monospace; }
+    pre { background: #1e293b; color: #e2e8f0; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; line-height: 1.6; }
+    pre code { background: transparent; padding: 0; color: inherit; font-size: inherit; }
+
+    /* Callout boxes */
+    .highlight-box { background: linear-gradient(135deg, #eff6ff, #f0f9ff); border-left: 4px solid #3b82f6; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+    .warning-box { background: linear-gradient(135deg, #fef3c7, #fffbeb); border-left: 4px solid #f59e0b; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+    .success-box { background: linear-gradient(135deg, #d1fae5, #ecfdf5); border-left: 4px solid #10b981; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+    .purple-box { background: linear-gradient(135deg, #f5f3ff, #ede9fe); border-left: 4px solid #8b5cf6; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+
+    /* Blockquote - for differentiation highlights per template standard */
+    blockquote {
+      border-left: 4px solid #3b82f6;
+      margin: 14px 0;
+      padding: 12px 18px;
+      background: #eff6ff;
+      border-radius: 0 8px 8px 0;
+      font-style: italic;
+      color: #1e40af;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Tags */
+    .tag { display: inline-block; padding: 3px 9px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .tag-p0 { background: #fee2e2; color: #dc2626; }
+    .tag-p1 { background: #fef3c7; color: #d97706; }
+    .tag-p2 { background: #dbeafe; color: #2563eb; }
+    .tag-new { background: #d1fae5; color: #065f46; }
+    .tag-updated { background: #fce7f3; color: #9d174d; }
+
+    .status-done { color: #10b981; font-weight: 600; }
+    .status-progress { color: #f59e0b; font-weight: 600; }
+    .status-plan { color: #6b7280; }
+
+    /* Mermaid */
+    .mermaid { background: white; padding: 16px; border-radius: 8px; margin: 12px 0; overflow-x: auto; }
+
+    /* Feature module */
+    .feature-module { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .feature-header { margin-bottom: 18px; padding-bottom: 12px; border-bottom: 2px solid #e2e8f0; }
+    .feature-content { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 1024px) { .feature-content { grid-template-columns: 1fr; } }
+
+    /* Device frames */
+    .device-frame {
+      position: relative; background: #1f2937; border-radius: 40px;
+      padding: 12px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.25); display: inline-block;
+    }
+    .device-frame-inner { width: 375px; height: 700px; background: white; border-radius: 28px; overflow: hidden; }
+    .device-frame iframe { width: 100%; height: 100%; border: none; }
+    .desktop-frame { width: 100%; height: 580px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: white; }
+    .desktop-frame iframe { width: 100%; height: 100%; border: none; }
+    .device-switcher { display: flex; gap: 8px; margin-bottom: 14px; }
+    .device-switcher button { padding: 7px 14px; border-radius: 8px; border: 1px solid #e2e8f0; background: white; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+    .device-switcher button:hover { background: #f8fafc; }
+    .device-switcher button.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+
+    /* Right sidebar */
+    .right-sidebar .device-frame { transform: scale(0.82); transform-origin: top center; margin: 0 auto; display: block; }
+    .feature-nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .feature-nav-grid button { padding: 10px 8px; border: 1px solid #e2e8f0; border-radius: 8px; background: white; cursor: pointer; font-size: 12px; text-align: center; transition: all 0.2s; }
+    .feature-nav-grid button:hover { background: #f1f5f9; border-color: #3b82f6; }
+    .feature-nav-grid button strong { display: block; font-size: 13px; margin-bottom: 2px; }
+    .feature-nav-grid button span { font-size: 11px; color: #64748b; }
+
+    /* MoE Pipeline diagram */
+    .pipeline-step {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 16px; background: #f8fafc; border-radius: 8px;
+      margin-bottom: 8px; border-left: 3px solid #3b82f6;
+    }
+    .pipeline-step-num {
+      width: 24px; height: 24px; background: #3b82f6; color: white;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+    }
+    .pipeline-step-content { flex: 1; }
+    .pipeline-step-title { font-weight: 600; color: #1e293b; font-size: 14px; margin-bottom: 3px; }
+    .pipeline-step-desc { color: #64748b; font-size: 13px; line-height: 1.5; }
+
+    .expert-card {
+      padding: 12px 14px; background: white; border: 1px solid #e2e8f0;
+      border-radius: 8px; margin-bottom: 8px; transition: all 0.2s;
+    }
+    .expert-card:hover { border-color: #3b82f6; box-shadow: 0 2px 8px rgba(59,130,246,0.1); }
+    .expert-card-title { font-weight: 600; color: #1e293b; font-size: 14px; margin-bottom: 4px; }
+    .expert-card-domain { font-size: 12px; color: #64748b; }
+
+    .confidence-bar { display: flex; gap: 0; margin: 10px 0; border-radius: 8px; overflow: hidden; }
+    .confidence-segment { padding: 8px 14px; font-size: 12px; font-weight: 600; text-align: center; flex: 1; }
+    .conf-high { background: #d1fae5; color: #065f46; }
+    .conf-mid { background: #fef3c7; color: #92400e; }
+    .conf-low { background: #fee2e2; color: #991b1b; }
+
+    /* Quick Jump Buttons */
+    .quick-jump-section {
+      margin-top: 24px; padding-top: 20px; border-top: 2px solid #e2e8f0;
+    }
+    .quick-jump-section h4 {
+      margin-top: 0; margin-bottom: 12px; color: #1e293b; font-size: 14px; font-weight: 600;
+    }
+    .quick-jump-grid {
+      display: flex; flex-wrap: wrap; gap: 8px;
+    }
+    .jump-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 20px; border: 1.5px solid #e2e8f0;
+      background: white; cursor: pointer; font-size: 12px; font-weight: 500;
+      color: #475569; text-decoration: none; transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .jump-btn:hover {
+      background: #eff6ff; border-color: #3b82f6; color: #1d4ed8;
+      transform: translateY(-1px); box-shadow: 0 3px 8px rgba(59,130,246,0.15);
+    }
+    .jump-btn .jump-icon { font-size: 14px; }
+    .jump-btn.highlight {
+      background: linear-gradient(135deg, #eff6ff, #f5f3ff);
+      border-color: #818cf8; color: #4338ca; font-weight: 600;
+    }
+    .jump-btn.highlight:hover {
+      background: linear-gradient(135deg, #e0e7ff, #ede9fe);
+      border-color: #4338ca;
+    }
+
+    /* Back to Top Button */
+    #back-to-top {
+      position: fixed; right: 28px; bottom: 32px; z-index: 999;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(59,130,246,0.35);
+      opacity: 0; transform: translateY(12px) scale(0.85);
+      transition: opacity 0.3s, transform 0.3s, box-shadow 0.2s;
+      pointer-events: none;
+    }
+    #back-to-top.visible {
+      opacity: 1; transform: translateY(0) scale(1); pointer-events: auto;
+    }
+    #back-to-top:hover {
+      box-shadow: 0 6px 20px rgba(59,130,246,0.5);
+      transform: translateY(-2px) scale(1.08);
+    }
+    #back-to-top svg { width: 20px; height: 20px; }
+
+    @media print {
+      .toc, .header-bar, .right-sidebar { display: none; }
+      .main-content { margin-left: 0; margin-right: 0; }
+    }
+    @media (max-width: 1400px) {
+      .right-sidebar { display: none; }
+      .main-content { margin-right: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Table of Contents -->
+  <nav class="toc">
+    <div class="p-4 border-b border-gray-200">
+      <div class="font-bold text-base text-gray-900">PawMind</div>
+      <div class="text-xs text-gray-500 mt-0.5">AI 宠物健康管理平台</div>
+    </div>
+    <div class="py-2">
+      <div class="toc-group-label">基础信息</div>
+      <a href="#project-info" class="toc-h1">📋 项目信息</a>
+      <a href="#overview" class="toc-h1">产品定位</a>
+      <div class="toc-group-label">产品架构</div>
+      <a href="#architecture" class="toc-h1">一、产品架构总览</a>
+      <a href="#arch-structure" class="toc-h2">1.1 全局结构图</a>
+      <a href="#arch-hierarchy" class="toc-h2">1.2 信息层级</a>
+      <a href="#arch-data" class="toc-h2">1.3 核心数据模型</a>
+      <a href="#users" class="toc-h1">二、用户与场景</a>
+      <a href="#user-persona" class="toc-h2">2.1 用户画像</a>
+      <a href="#user-journey" class="toc-h2">2.2 用户旅程图</a>
+      <a href="#pages" class="toc-h1">三、核心页面</a>
+      <a href="#features" class="toc-h1">四、核心功能清单</a>
+      <a href="#feat-health" class="toc-h2">4.1 健康管理</a>
+      <a href="#feat-device" class="toc-h2">4.2 设备管理</a>
+      <a href="#feat-record" class="toc-h2">4.3 健康档案</a>
+      <a href="#feat-vaccine" class="toc-h2">4.4 电子疫苗本</a>
+      <a href="#feat-careai" class="toc-h2">4.5 CareAI</a>
+      <div class="toc-group-label">详细设计</div>
+      <a href="#design" class="toc-h1">五、详细方案设计</a>
+      <a href="#design-health" class="toc-h2">5.1 健康数据可视化</a>
+      <a href="#design-device" class="toc-h2">5.2 设备绑定流程</a>
+      <a href="#design-record" class="toc-h2">5.3 健康档案多输入</a>
+      <a href="#design-vaccine" class="toc-h2">5.4 疫苗条形码扫描</a>
+      <a href="#design-careai-chat" class="toc-h2">5.5 CareAI MoE 问答</a>
+      <a href="#design-diagnosis" class="toc-h2">5.6 AI 拍照诊断</a>
+      <a href="#flow" class="toc-h1">六、业务流程图</a>
+      <a href="#exception" class="toc-h1">七、异常与边界</a>
+      <div class="toc-group-label">战略</div>
+      <a href="#ai" class="toc-h1">八、AI 能力定位</a>
+      <a href="#ai-moe" class="toc-h2">8.1 CareAI MoE 架构</a>
+      <a href="#ai-pipeline" class="toc-h2">8.2 完整请求管道</a>
+      <a href="#ai-memory" class="toc-h2">8.3 记忆管理</a>
+      <a href="#ai-hallucination" class="toc-h2">8.4 幻觉控制</a>
+      <a href="#ai-eval" class="toc-h2">8.5 评估体系</a>
+      <a href="#competitor" class="toc-h1">九、竞品对比</a>
+      <a href="#principles" class="toc-h1">十、设计原则</a>
+      <a href="#tech" class="toc-h1">十一、技术要点</a>
+      <a href="#roadmap" class="toc-h1">十二、版本演进</a>
+    </div>
+  </nav>
+
+  <!-- Right Sidebar -->
+  <aside class="right-sidebar">
+    <div class="right-sidebar-header">
+      <h3>🎨 交互原型预览</h3>
+      <p style="font-size: 11px; color: #64748b; margin-top: 4px;">支持 Focus 模式，锁定非相关区域</p>
+    </div>
+    <div class="device-switcher" style="justify-content: center;">
+      <button class="active" onclick="switchDevice('mobile')">📱 移动端</button>
+      <button onclick="switchDevice('desktop')">💻 桌面端</button>
+    </div>
+    <div id="mobile-frame" style="display: flex; justify-content: center;">
+      <div class="device-frame">
+        <div class="device-frame-inner">
+          <iframe id="mobile-iframe" src="../prototype/PawMind-Prototype-v2.0.html#home" title="PawMind Prototype"></iframe>
+        </div>
+      </div>
+    </div>
+    <div id="desktop-frame" style="display: none;">
+      <div class="desktop-frame">
+        <iframe id="desktop-iframe" src="../prototype/PawMind-Prototype-v2.0.html#home" title="PawMind Desktop Prototype"></iframe>
+      </div>
+    </div>
+    <div class="feature-nav-grid">
+      <button onclick="loadPrototype('home')"><strong>🏠 首页</strong><span>今日状态</span></button>
+      <button onclick="loadPrototype('health')"><strong>🩺 健康</strong><span>指标 + 趋势</span></button>
+      <button onclick="loadPrototype('device')"><strong>📟 设备</strong><span>绑定管理</span></button>
+      <button onclick="loadPrototype('careai')"><strong>🤖 CareAI</strong><span>MoE 问答</span></button>
+      <button onclick="loadPrototype('vaccine')"><strong>💉 疫苗</strong><span>扫描记录</span></button>
+      <button onclick="loadPrototype('growth')"><strong>📖 成长</strong><span>月度报告</span></button>
+    </div>
+    <script>
+      function switchDevice(device) {
+        document.querySelectorAll('.device-switcher button').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById('mobile-frame').style.display = device === 'mobile' ? 'flex' : 'none';
+        document.getElementById('desktop-frame').style.display = device === 'desktop' ? 'block' : 'none';
+      }
+      function loadPrototype(page) {
+        const base = '../prototype/PawMind-Prototype-v2.0.html';
+        document.getElementById('mobile-iframe').src = `${base}#${page}`;
+        document.getElementById('desktop-iframe').src = `${base}#${page}`;
+      }
+    </script>
+  </aside>
+
+  <!-- Header Bar -->
+  <div class="header-bar">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-weight: 700; color: #1e293b;">PawMind</span>
+      <span style="font-size: 13px; color: #94a3b8;">PRD 文档</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <select id="version-switcher" onchange="switchVersion(this.value)" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 5px 10px; font-size: 13px; background: white; cursor: pointer;">
+        <option value="v2.1" selected>v2.1 (当前)</option>
+        <option value="v2.0">v2.0</option>
+      </select>
+      <span class="version-badge">v2.1</span>
+      <span class="version-new-badge">MoE CareAI</span>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="content-wrapper" style="padding-top: 78px;">
+
+      <!-- Project Info -->
+      <div class="section" id="project-info">
+        <h2 style="margin-top: 0;">📋 项目信息</h2>
+        <table>
+          <tr><th style="width: 130px;">字段</th><th>内容</th></tr>
+          <tr><td><strong>产品名称</strong></td><td>PawMind — AI 宠物健康管理平台</td></tr>
+          <tr><td><strong>版本定义</strong></td><td>v2.1 — CareAI MoE 微服务架构升级</td></tr>
+          <tr><td><strong>文档负责人</strong></td><td>陈智远</td></tr>
+          <tr><td><strong>核心目标</strong></td><td>将 CareAI 健康问答从关键词匹配升级为 MoE 路由 + RAG 检索 + 长短期记忆的高质量 AI 问答微服务</td></tr>
+          <tr><td><strong>交互原型</strong></td><td><code>../prototype/PawMind-Prototype-v2.0.html</code></td></tr>
+        </table>
+
+        <h3 style="margin-top: 20px;">版本记录</h3>
+        <table>
+          <tr>
+            <th style="width: 120px;">日期</th>
+            <th style="width: 80px;">版本号</th>
+            <th>修改内容</th>
+            <th style="width: 80px;">修改人</th>
+          </tr>
+          <tr>
+            <td>2026-04-16</td>
+            <td><strong>v2.1</strong></td>
+            <td>CareAI 升级为 MoE 微服务架构（意图路由 + 专家模块池 + RAG + 两层记忆管理 + 幻觉控制）；新增第三节核心页面；技术要点补充 CareAI 技术栈；竞品差异化亮点改为 blockquote 格式；Roadmap 新增 v2.1 和 v2.5 节点</td>
+            <td>陈智远</td>
+          </tr>
+          <tr>
+            <td>2026-04-14</td>
+            <td>v2.0</td>
+            <td>整合 v1.0 和 v2.0 产品信息，按 fullstack-product-dev 技能标准重新输出；新增设备管理、健康档案、电子疫苗本；CareAI 替换 AI 陪伴模块</td>
+            <td>陈智远</td>
+          </tr>
+          <tr>
+            <td>2026-04-10</td>
+            <td>v1.0</td>
+            <td>初稿，确立核心功能模块（健康管理 + AI 陪伴 + 成长日记）</td>
+            <td>陈智远</td>
+          </tr>
+        </table>
+
+        <!-- Quick Jump Navigation -->
+        <div class="quick-jump-section">
+          <h4>⚡ 快速跳转 — 本版本迭代内容</h4>
+          <div class="quick-jump-grid">
+            <a class="jump-btn highlight" href="#ai">
+              <span class="jump-icon">🤖</span>八、CareAI MoE 架构（v2.1 核心）
+            </a>
+            <a class="jump-btn highlight" href="#ai-pipeline">
+              <span class="jump-icon">🔀</span>8.2 完整请求管道
+            </a>
+            <a class="jump-btn highlight" href="#ai-memory">
+              <span class="jump-icon">🧠</span>8.3 记忆管理
+            </a>
+            <a class="jump-btn highlight" href="#ai-hallucination">
+              <span class="jump-icon">🛡️</span>8.4 幻觉控制
+            </a>
+            <a class="jump-btn highlight" href="#ai-eval">
+              <span class="jump-icon">📊</span>8.5 评估体系
+            </a>
+            <a class="jump-btn" href="#pages">
+              <span class="jump-icon">📱</span>三、核心页面（新增）
+            </a>
+            <a class="jump-btn" href="#design-careai-chat">
+              <span class="jump-icon">💬</span>5.5 CareAI 问答流程
+            </a>
+            <a class="jump-btn" href="#tech">
+              <span class="jump-icon">⚙️</span>十一、技术要点
+            </a>
+            <a class="jump-btn" href="#roadmap">
+              <span class="jump-icon">🗺️</span>十二、版本演进
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Product Overview -->
+      <div class="section" id="overview">
+        <h1>PawMind</h1>
+        <p style="font-size: 18px; color: #64748b; margin-bottom: 20px;">AI 宠物健康管理平台 — 让 AI 成为宠物的私人健康管家</p>
+
+        <div class="highlight-box">
+          <strong>产品定位：</strong>PawMind 是面向<strong>城市养宠人群</strong>的 AI 宠物健康管理 App，通过智能设备数据采集、健康指标可视化、MoE 架构 AI 健康问答、拍照诊断和健康知识服务，帮助主人全面掌握宠物健康状况，及时发现健康隐患，低门槛获取可信的宠物健康建议。
+        </div>
+
+        <h4>核心数据流</h4>
+        <pre><code>多渠道健康数据（设备自动上报 / 手动录入 / 拍照扫描）
+  → 数据聚合与指标计算
+  → 健康指标可视化（24h / 7天趋势）
+  → CareAI MoE 智能体（意图路由 → 专家分发 → RAG 检索 → LLM 生成 → 记忆管理）
+  → 主人知情 & 行动（预警 / 可信回答 / 就医建议）</code></pre>
+      </div>
+
+      <!-- Section 1: Architecture -->
+      <div class="section" id="architecture">
+        <h2>一、产品架构总览</h2>
+
+        <h3 id="arch-structure">1.1 全局结构图（移动端 App）</h3>
+        <pre><code>┌─ 顶部导航栏 ──────────────────────────────────────────────────┐
+│  PawMind Logo         [宠物昵称/切换]          通知铃 🔔  头像   │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│                        主内容区                               │
+│   ┌─────────────────────────────────────────────────────┐   │
+│   │  今日状态卡 / CareAI MoE 问答 / 健康指标 / 功能页面     │   │
+│   └─────────────────────────────────────────────────────┘   │
+│                                                              │
+├──────────────────────────────────────────────────────────────┤
+│  底部 TabBar                                                  │
+│  🏠 首页     🤖 CareAI     📊 健康     📸 成长册     👤 我     │
+└──────────────────────────────────────────────────────────────┘</code></pre>
+
+        <h3 id="arch-hierarchy">1.2 信息层级</h3>
+        <pre><code>用户账号（全局唯一，支持多宠物管理）
+  └ 宠物档案（每只宠物独立档案）
+      ├ 基础信息（品种 / 年龄 / 体重 / 头像）
+      ├ 绑定设备列表
+      │   └ 设备详情（类型 / 电量 / 网络 / 产品信息）
+      ├ 健康数据
+      │   ├ 实时指标（设备上报：饮水量/饮食量/运动量/睡眠/体温/心率/排便）
+      │   ├ 手动录入（体重/饮食量/饮水量/体温/排便）
+      │   └ 指标可视化（24h / 7天趋势折线图）
+      ├ 健康档案
+      │   ├ 就诊记录（诊断/处方/医嘱/附件）
+      │   └ 日常观察（自由文本/标签）
+      ├ 电子疫苗本
+      │   └ 疫苗记录（条形码扫描 + 接种提醒）
+      ├ CareAI 记录
+      │   ├ MoE 健康问答历史（含专家路由信息）
+      │   ├ AI 拍照诊断报告（口腔/粪便/皮肤/报告/药品）
+      │   └ 每日小知识
+      └ 成长日记（照片 / 视频 / 里程碑）</code></pre>
+
+        <h3 id="arch-data">1.3 核心数据模型</h3>
+        <table>
+          <tr><th>实体</th><th>核心字段</th><th>关联关系</th></tr>
+          <tr><td><strong>User</strong></td><td>id, email, nickname, avatar, createdAt</td><td>1:N Pet</td></tr>
+          <tr><td><strong>Pet</strong></td><td>name, species, breed, birthday, weight, avatar</td><td>1:N Device, HealthMetric, HealthRecord, Vaccination, CareAiSession</td></tr>
+          <tr><td><strong>Device</strong></td><td>name, type, status, batteryLevel, networkStatus, serialNumber</td><td>属于 User &amp; Pet，1:N HealthMetric</td></tr>
+          <tr><td><strong>HealthMetric</strong></td><td>metricType, value, unit, source, recordedAt</td><td>属于 Pet，可关联 Device</td></tr>
+          <tr><td><strong>HealthRecord</strong></td><td>recordType, content, tags, inputMethod, attachments</td><td>属于 Pet</td></tr>
+          <tr><td><strong>Vaccination</strong></td><td>vaccineName, barcode, vaccinationDate, nextDueDate</td><td>属于 Pet</td></tr>
+          <tr><td><strong>CareAiSession</strong></td><td>id, petId, expertRoute, createdAt</td><td>1:N CareAiMessage；关联 LongTermMemory</td></tr>
+          <tr><td><strong>CareAiMessage</strong></td><td>role, content, expertUsed, confidence, createdAt</td><td>属于 CareAiSession</td></tr>
+          <tr><td><strong>LongTermMemory</strong></td><td>petId, summary, updatedAt</td><td>属于 Pet，跨 session 持久化</td></tr>
+          <tr><td><strong>DiagnosisReport</strong></td><td>diagnosisType, imageUrl, resultSummary, resultDetail</td><td>属于 Pet &amp; Session</td></tr>
+        </table>
+        <p style="font-size: 13px; color: #94a3b8; margin-top: 8px;">
+          关系说明：User 1:N Pet；Pet 1:N Device；Pet 1:N HealthMetric；Pet 1:N CareAiSession；CareAiSession 1:N CareAiMessage；Pet 1:1 LongTermMemory（跨 session 持久化）
+        </p>
+      </div>
+
+      <!-- Section 2: Users -->
+      <div class="section" id="users">
+        <h2>二、用户与使用场景</h2>
+
+        <h3 id="user-persona">2.1 典型用户画像</h3>
+        <table>
+          <tr><th>用户类型</th><th>特征描述</th><th>核心需求</th></tr>
+          <tr>
+            <td><strong>忙碌打工人</strong></td>
+            <td>25–35 岁城市白领，独居养宠，工作日在公司超 10 小时</td>
+            <td>快速了解宠物状态，低门槛陪伴感</td>
+          </tr>
+          <tr>
+            <td><strong>健康焦虑型主人</strong></td>
+            <td>对宠物健康高度重视，愿意记录详细数据</td>
+            <td>全面追踪健康指标，异常预警，就医时能提供完整病史</td>
+          </tr>
+          <tr>
+            <td><strong>新手宠主</strong></td>
+            <td>刚开始养宠，不了解宠物行为规律与护理常识</td>
+            <td>饲养建议，健康知识，AI 辅助判断是否需要就医</td>
+          </tr>
+          <tr>
+            <td><strong>多设备用户</strong></td>
+            <td>已购置智能喂食器、项圈、猫砂盆等硬件</td>
+            <td>设备统一管理，数据自动同步，无需分散查看</td>
+          </tr>
+        </table>
+
+        <h3 id="user-journey">2.2 核心用户旅程图</h3>
+        <table>
+          <tr><th>阶段</th><th>触点</th><th>用户行为</th><th>痛点/情绪</th><th>功能转化</th></tr>
+          <tr>
+            <td><strong>1. 发现</strong></td>
+            <td>社交媒体/口碑</td>
+            <td>看到"AI 宠物健康"相关内容</td>
+            <td>半信半疑，不确定价值</td>
+            <td>健康报告截图社交传播，营造社交货币</td>
+          </tr>
+          <tr>
+            <td><strong>2. 注册建档</strong></td>
+            <td>App 首次启动</td>
+            <td>填写宠物信息、上传照片</td>
+            <td>流程繁琐，担心无聊放弃</td>
+            <td>3 步建档，AI 生成宠物性格速写</td>
+          </tr>
+          <tr>
+            <td><strong>3. 设备绑定</strong></td>
+            <td>设备管理页</td>
+            <td>购置设备后绑定到 App</td>
+            <td>不确定兼容性，绑定步骤不直觉</td>
+            <td>设备型商城 + 图文配对引导</td>
+          </tr>
+          <tr>
+            <td><strong>4. 日常监测</strong></td>
+            <td>健康 Tab</td>
+            <td>每天查看健康指标卡</td>
+            <td>数据散乱，无法一眼判断宠物状态</td>
+            <td>健康指标卡（24h/7天汇总 + 异常标注）</td>
+          </tr>
+          <tr>
+            <td><strong>5. 异常处理</strong></td>
+            <td>推送通知</td>
+            <td>收到异常提醒，查看详情</td>
+            <td>不知严重程度，慌乱不知如何应对</td>
+            <td>AI 分级预警 + 分级行动建议</td>
+          </tr>
+          <tr>
+            <td><strong>6. AI 健康咨询</strong></td>
+            <td>CareAI Tab</td>
+            <td>发现异常或日常疑问时咨询 AI</td>
+            <td>网上信息杂乱，无法判断可信度；AI 回答不准确</td>
+            <td>CareAI MoE 问答：专家路由 + RAG 知识检索 + 记忆连续对话</td>
+          </tr>
+          <tr>
+            <td><strong>7. 成长记录</strong></td>
+            <td>成长册</td>
+            <td>记录精彩瞬间，分享给朋友</td>
+            <td>照片散乱，无成就感和仪式感</td>
+            <td>AI 月度成长报告，一键分享</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Section 3: Core Pages (NEW in v2.1) -->
+      <div class="section" id="pages">
+        <h2>三、核心页面 <span class="tag tag-new">v2.1 新增</span></h2>
+
+        <h3>页面 1：首页（今日状态）</h3>
+        <p>用户打开 App 的第一视角，快速掌握宠物今日整体状态与最新提醒。</p>
+        <table>
+          <tr><th>区域</th><th>内容</th><th>设计要点</th></tr>
+          <tr><td><strong>顶部导航</strong></td><td>宠物昵称/切换、通知铃、头像</td><td>多宠物用户可快速切换，通知铃显示未读气泡</td></tr>
+          <tr><td><strong>今日状态卡</strong></td><td>AI 生成的宠物今日健康一句话摘要 + 健康评分</td><td>情感化表达，让主人一眼感知宠物状态</td></tr>
+          <tr><td><strong>快捷指标</strong></td><td>3~4 个核心指标横向滑动展示</td><td>点击跳转健康 Tab 对应指标详情</td></tr>
+          <tr><td><strong>最新提醒</strong></td><td>异常预警 / 疫苗到期提醒 / 每日小知识</td><td>按优先级排序，预警红色高亮</td></tr>
+          <tr><td><strong>底部 TabBar</strong></td><td>首页 / CareAI / 健康 / 成长册 / 我</td><td>CareAI 居中强调，凸显核心差异化功能</td></tr>
+        </table>
+
+        <h3>页面 2：CareAI（AI 健康助手）</h3>
+        <p>宠物健康问答与 AI 诊断的核心入口，v2.1 升级为 MoE 架构后的产品呈现页。</p>
+        <table>
+          <tr><th>区域</th><th>内容</th><th>设计要点</th></tr>
+          <tr><td><strong>每日小知识</strong></td><td>顶部横幅展示今日知识卡片</td><td>按专家分类着色，与 MoE 专家域对应</td></tr>
+          <tr><td><strong>AI 诊断入口宫格</strong></td><td>口腔 / 粪便 / 皮肤 / 报告解读 / 药品识别</td><td>图标 + 简短描述，一目了然</td></tr>
+          <tr><td><strong>悬浮问答按钮</strong></td><td>右下角"向 CareAI 提问"快捷入口</td><td>保持随时可达性；问答页面为全屏对话 UI</td></tr>
+          <tr><td><strong>专家标识</strong></td><td>AI 回复气泡左侧显示路由到的专家图标</td><td>增强可信度感知，让用户知道回答来自哪个专家</td></tr>
+        </table>
+
+        <h3>页面 3：健康（指标中心）</h3>
+        <p>宠物健康数据的全量视图，支持设备数据与手动录入双轨并行。</p>
+        <table>
+          <tr><th>区域</th><th>内容</th><th>设计要点</th></tr>
+          <tr><td><strong>健康指标卡横列</strong></td><td>饮食/饮水/运动/睡眠/体温/心率/排便/体重</td><td>横向滑动；已激活显示数值，未激活显示引导购买</td></tr>
+          <tr><td><strong>趋势折线图</strong></td><td>点击指标卡展开 24h/7天趋势图</td><td>异常区间红色标注，正常区间绿色底纹</td></tr>
+          <tr><td><strong>手动录入入口</strong></td><td>右上角"+ 录入"按钮</td><td>支持体重/饮食量/饮水量/体温/排便快速录入</td></tr>
+          <tr><td><strong>异常预警卡</strong></td><td>当前活跃预警列表</td><td>点击可查看 AI 建议 + 行动选项</td></tr>
+        </table>
+
+        <h3>页面 4：成长册</h3>
+        <p>宠物成长历程的情感化记录，承载照片、视频与里程碑。</p>
+        <table>
+          <tr><th>区域</th><th>内容</th><th>设计要点</th></tr>
+          <tr><td><strong>月度成长报告</strong></td><td>AI 生成的图文月报（体重/活动量/健康摘要）</td><td>分享卡设计，适合社交媒体发布</td></tr>
+          <tr><td><strong>时间线</strong></td><td>按月分组展示照片/视频/里程碑</td><td>里程碑特殊视觉标记（如：第一次洗澡）</td></tr>
+          <tr><td><strong>上传入口</strong></td><td>"+ 添加"浮动按钮，可拍照或从相册选择</td><td>快速录入，不打断用户情绪</td></tr>
+        </table>
+
+        <h3>页面 5：我（个人中心）</h3>
+        <p>用户账号管理、宠物档案设置、设备管理、疫苗本的统一入口。</p>
+        <table>
+          <tr><th>区域</th><th>内容</th><th>设计要点</th></tr>
+          <tr><td><strong>宠物档案</strong></td><td>当前宠物基础信息查看/编辑</td><td>头像大图展示，信息完整度引导补充</td></tr>
+          <tr><td><strong>设备管理</strong></td><td>已绑定设备列表 + 添加设备入口</td><td>设备状态一眼可见（在线/离线/低电量）</td></tr>
+          <tr><td><strong>电子疫苗本</strong></td><td>疫苗接种历史 + 下次提醒日期</td><td>待接种疫苗置顶红色提醒</td></tr>
+          <tr><td><strong>健康档案</strong></td><td>就诊记录 + 日常观察时间线</td><td>支持多输入方式（打字/OCR/语音）</td></tr>
+        </table>
+      </div>
+
+      <!-- Section 4: Features -->
+      <div class="section" id="features">
+        <h2>四、核心功能清单</h2>
+
+        <h3 id="feat-health">4.1 健康管理模块</h3>
+        <table>
+          <tr><th>功能点</th><th>描述</th><th>优先级</th></tr>
+          <tr><td>健康指标卡</td><td>展示 24h/7天核心健康指标汇总，设备驱动显示</td><td><span class="tag tag-p0">P0</span></td></tr>
+          <tr><td>指标数据可视化</td><td>各指标的趋势折线图，支持时间范围切换</td><td><span class="tag tag-p0">P0</span></td></tr>
+          <tr><td>设备驱动显示</td><td>已绑定设备的指标正常展示，未绑定的显示营销引导卡</td><td><span class="tag tag-p0">P0</span></td></tr>
+          <tr><td>手动录入指标</td><td>体重、饮食量、饮水量、体温、排便情况手动录入</td><td><span class="tag tag-p0">P0</span></td></tr>
+          <tr><td>异常预警</td><td>基于指标阈值检测异常并推送分级预警通知</td><td><span class="tag tag-p0">P0</span></td></tr>
+          <tr><td>设备数据接收</td><td>接收智能设备上报的健康数据（v2.0 Mock，v2.1 保持）</td><td><span class="tag tag-p1">P1</span></td></tr>
+        </table>
+
+        <h4>指标与设备映射</h4>
+        <table>
+          <tr><th>指标</th><th>数据来源设备</th><th>手动可录</th></tr>
+          <tr><td>饮食量</td><td>智能喂食器</td><td>✅</td></tr>
+          <tr><td>饮水量</td><td>智能饮水机</td><td>✅</td></tr>
+          <tr><td>运动量/步数</td><td>智能项圈</td><td>❌</td></tr>
+          <tr><td>睡眠时长</td><td>智能项圈</td><td>❌</td></tr>
+          <tr><td>体温</td><td>智能项圈</td><td>✅</td></tr>
+          <tr><td>心率</td><td>智能项圈</td><td>❌</td></tr>
+          <tr><td>排便情况</td><td>智能猫砂盆</td><td>✅</td></tr>
+          <tr><td>体重</td><td>无（纯手动）</td><td>✅</td></tr>
+        </table>
+
+        <h3 id="feat-device">4.2 设备管理模块</h3>
+        <table>
+          <tr><th>功能点</th><th>描述</th><th>优先级</th></tr>
+          <tr><td>设备列表</td><td>展示已绑定设备卡片（名称、图标、电量、连接状态）</td><td><span class="tag tag-p0">P0</span></td></tr>
+          <tr><td>添加/绑定设备</td><td>选择设备类型 → 配对引导 → 绑定确认</td><td><span class="tag tag-p0">P0</span></td></tr>
+          <tr><td>设备详情</td><td>名称可编辑、绑定时间、电量、网络状态、产品信息</td><td><span class="tag tag-p0">P0</span></td></tr>
+          <tr><td>删除设备</td><td>解绑设备，确认弹窗，历史数据保留</td><td><span class="tag tag-p0">P0</span></td></tr>
+          <tr><td>设备商城</td><td>展示型商城，设备列表 + 参数介绍 + 外部购买链接</td><td><span class="tag tag-p1">P1</span></td></tr>
+        </table>
+
+        <h3 id="feat-record">4.3 健康档案模块</h3>
+        <table>
+          <tr><th>功能点</th><th>描述</th><th>优先级</th></tr>
+          <tr><td>添加就诊记录</td><td>就诊日期、医院、诊断、处方、医嘱、附件图片</td><td><span class="tag tag-p0">P0</span></td></tr>
+          <tr><td>添加日常观察</td><td>记录日期、观察内容（自由文本）、标签</td><td><span class="tag tag-p0">P0</span></td></tr>
+          <tr><td>多输入方式</td><td>底部工具栏切换：键盘打字 / OCR 拍照识别 / 语音输入</td><td><span class="tag tag-p0">P0</span></td></tr>
+          <tr><td>档案时间线</td><td>按时间倒序展示所有健康档案，支持类型筛选</td><td><span class="tag tag-p0">P0</span></td></tr>
+          <tr><td>档案编辑/删除</td><td>编辑已有记录、删除（确认弹窗）</td><td><span class="tag tag-p1">P1</span></td></tr>
+        </table>
+
+        <h3 id="feat-vaccine">4.4 电子疫苗本模块</h3>
+        <table>
+          <tr><th>功能点</th><th>描述</th><th>优先级</th></tr>
+          <tr><td>疫苗列表</td><td>按时间倒序展示已接种疫苗，待接种疫苗置顶提醒</td><td><span class="tag tag-p0">P0</span></td></tr>
+          <tr><td>条形码扫描添加</td><td>扫描条形码 → OCR 预填疫苗名称 → 手动补充信息</td><td><span class="tag tag-p0">P0</span></td></tr>
+          <tr><td>接种提醒</td><td>基于下次接种日期推送本地通知</td><td><span class="tag tag-p1">P1</span></td></tr>
+        </table>
+
+        <h3 id="feat-careai">4.5 CareAI 模块 <span class="tag tag-updated">v2.1 架构升级</span></h3>
+        <table>
+          <tr><th>功能点</th><th>描述</th><th>优先级</th></tr>
+          <tr>
+            <td><strong>MoE 健康知识问答</strong></td>
+            <td>基于意图路由 → 专家分发 → RAG 检索 → LLM 生成的高质量连续对话；自动注入宠物档案上下文</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td><strong>专家标识展示</strong></td>
+            <td>AI 回复显示路由到的专家类型（症状/饮食/疫苗/行为/护理）</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td><strong>置信度声明</strong></td>
+            <td>相似度 0.5–0.75 区间自动附加不确定性声明；低于 0.5 返回兜底话术</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td><strong>连续对话记忆</strong></td>
+            <td>短期记忆（当次 session 最近 6 轮）+ 长期记忆（跨 session 宠物健康关键事实）</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td><strong>每日小知识</strong></td>
+            <td>固定知识库每日推送，按专家分类组织，可回看历史</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+          <tr>
+            <td><strong>AI 拍照诊断</strong></td>
+            <td>口腔/粪便/皮肤/报告解读/药品识别，拍照引导 → 上传 → 分析结果</td>
+            <td><span class="tag tag-p1">P1</span></td>
+          </tr>
+          <tr>
+            <td><strong>诊断结果保存</strong></td>
+            <td>分析结果可保存到健康档案</td>
+            <td><span class="tag tag-p1">P1</span></td>
+          </tr>
+          <tr>
+            <td><strong>免责声明</strong></td>
+            <td>所有 AI 分析结果页固定展示免责说明</td>
+            <td><span class="tag tag-p0">P0</span></td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Section 5: Design -->
+      <div class="section" id="design">
+        <h2>五、详细方案设计</h2>
+
+        <h3 id="design-health">5.1 健康管理 — 数据可视化</h3>
+        <div class="mermaid">
+flowchart TD
+    A([用户进入健康 Tab]) --> B[加载宠物绑定设备列表]
+    B --> C[查询 24h/7天健康指标数据]
+    C --> D[渲染健康指标卡区域]
+    D --> E{指标是否已激活?}
+    E -- 已激活 --> F[展示数值 + 趋势图]
+    E -- 未激活 --> G[展示营销引导卡]
+    G --> H{用户点击?}
+    H -- 是 --> I[跳转设备商城]
+    F --> J{用户点击指标卡?}
+    J -- 是 --> K[展开指标详情 + 折线图]
+    K --> L{切换时间范围?}
+    L -- 24h --> M[展示 24 小时数据]
+    L -- 7天 --> N[展示 7 天数据]
+        </div>
+        <div class="success-box">
+          <strong>规则说明：</strong>
+          <ul class="mt-2">
+            <li>已激活指标显示：指标名称、当前值、单位、对比上一周期变化（↑/↓/持平）</li>
+            <li>异常区间在折线图中红色标注，正常区间绿色底纹</li>
+            <li>手动可录指标在详情页提供「手动录入」快捷入口</li>
+            <li>未绑定设备的指标卡显示为灰色锁定状态 + 购买引导</li>
+          </ul>
+        </div>
+
+        <h3 id="design-device">5.2 设备管理 — 绑定流程</h3>
+        <div class="mermaid">
+flowchart TD
+    A([进入设备管理]) --> B[展示已绑定设备列表]
+    B --> C{点击操作?}
+    C -- 添加设备 --> D[选择设备类型]
+    C -- 点击设备卡片 --> E[进入设备详情]
+    D --> F[展示图文配对引导]
+    F --> G[模拟配对过程]
+    G --> H{配对结果?}
+    H -- 成功 --> I[设备命名 + 绑定宠物]
+    H -- 失败 --> J[展示排错指南]
+    I --> K[返回设备列表，新设备出现]
+    E --> L{操作?}
+    L -- 编辑名称 --> M[修改设备名称]
+    L -- 删除设备 --> N[确认弹窗 → 解绑]
+        </div>
+
+        <h3 id="design-record">5.3 健康档案 — 多输入方式</h3>
+        <div class="mermaid">
+flowchart TD
+    A([点击添加健康档案]) --> B{选择档案类型}
+    B -- 就诊记录 --> C[展示就诊记录表单]
+    B -- 日常观察 --> D[展示日常观察表单]
+    C --> E{选择输入方式}
+    D --> E
+    E -- 键盘打字 --> F[默认文本输入]
+    E -- OCR 拍照 --> G[调用相机拍照]
+    E -- 语音输入 --> H[调用麦克风]
+    G --> I[OCR 识别文字]
+    H --> K[语音转文字]
+    I --> J[预填表单字段]
+    K --> J
+    F --> L[用户填写/编辑]
+    J --> L
+    L --> M[提交保存]
+    M --> N[返回档案时间线]
+        </div>
+
+        <h3 id="design-vaccine">5.4 电子疫苗本 — 条形码扫描</h3>
+        <div class="mermaid">
+flowchart TD
+    A([点击添加疫苗]) --> B[调用相机扫描条形码]
+    B --> C{扫描结果?}
+    C -- 识别成功 --> D[OCR 预填疫苗名称]
+    C -- 识别失败 --> E[提示手动输入]
+    D --> F[展示疫苗信息表单]
+    E --> F
+    F --> G[用户补充接种信息]
+    G --> H[提交保存]
+    H --> I{设置了下次接种日期?}
+    I -- 是 --> J[注册本地通知提醒]
+    I -- 否 --> K[返回疫苗列表]
+    J --> K
+        </div>
+
+        <h3 id="design-careai-chat">5.5 CareAI MoE — 健康知识问答 <span class="tag tag-updated">v2.1 架构升级</span></h3>
+        <div class="mermaid">
+flowchart TD
+    A([用户点击健康问答]) --> B{是否有进行中的会话?}
+    B -- 是 --> C[加载历史消息 + 长期记忆摘要]
+    B -- 否 --> D[创建新会话]
+    C --> E[展示对话界面]
+    D --> E
+    E --> F[用户输入问题]
+    F --> G[发送至 NestJS 后端]
+    G --> G1[JWT 鉴权 + 组装宠物档案]
+    G1 --> H[转发至 CareAI MoE 微服务]
+    H --> H1[加载短期/长期记忆]
+    H1 --> H2[意图路由：LLM 分类 → 专家 + 置信度]
+    H2 --> H3[向量检索 + BGE Rerank]
+    H3 --> H4{检索置信度门控}
+    H4 -- ≥ 0.75 --> H5[正常生成]
+    H4 -- 0.5~0.75 --> H6[降级生成 + 不确定性声明]
+    H4 -- 小于 0.5 --> H7[返回兜底话术]
+    H5 --> I[展示 AI 回复 + 专家标识]
+    H6 --> I
+    H7 --> I
+    I --> J[异步更新长期记忆]
+    I --> K{用户操作?}
+    K -- 继续提问 --> F
+    K -- 退出 --> L[返回 CareAI 主页]
+        </div>
+
+        <div class="purple-box">
+          <strong>MoE 关键规则：</strong>
+          <ul class="mt-2">
+            <li><strong>专家标识</strong>：每条 AI 回复气泡左侧显示路由到的专家图标（例如：🩺 症状诊断专家）</li>
+            <li><strong>置信度透明</strong>：低置信度区间（0.5–0.75）回复末尾自动附加「以下仅供参考，建议咨询专业宠物医生确认」</li>
+            <li><strong>严重症状强制提示</strong>：涉及出血、抽搐、呼吸困难、超 24h 不进食，末尾强制附「请立即就医」</li>
+            <li><strong>边界拒绝</strong>：非宠物健康问题礼貌拒绝并引导回正题</li>
+            <li><strong>宠物上下文自动注入</strong>：每次请求自动携带品种、年龄、体重、近期健康指标</li>
+          </ul>
+        </div>
+
+        <h3 id="design-diagnosis">5.6 CareAI — AI 拍照诊断</h3>
+        <div class="mermaid">
+flowchart TD
+    A([用户选择诊断类型]) --> B[展示示例图拍照引导]
+    B --> C{拍照方式?}
+    C -- 拍照 --> D[调用相机]
+    C -- 从相册选择 --> E[打开相册]
+    D --> F[上传图片]
+    E --> F
+    F --> G[展示分析中动画 2~3 秒]
+    G --> H[展示分析结果 + 免责声明]
+    H --> I{用户操作?}
+    I -- 保存到健康档案 --> J[创建健康档案记录]
+    I -- 重新拍照 --> B
+    I -- 返回 --> K[返回 CareAI 主页]
+        </div>
+
+        <table>
+          <tr><th>诊断类型</th><th>拍照引导</th><th>结果示例</th></tr>
+          <tr><td>口腔检查</td><td>示例图引导拍摄口腔内部</td><td>口腔健康评分 85/100，建议定期洁牙</td></tr>
+          <tr><td>粪便检查</td><td>引导拍摄粪便全貌</td><td>形态正常（布里斯托 4 型），颜色正常，未见异常</td></tr>
+          <tr><td>皮肤检查</td><td>引导拍摄皮肤患处</td><td>轻微发红，建议观察 3 天，如持续请就医</td></tr>
+          <tr><td>报告解读</td><td>引导拍摄检验报告</td><td>检测到 5 项指标，其中 2 项偏高（标注），建议咨询宠医</td></tr>
+          <tr><td>药品识别</td><td>引导拍摄药品包装/说明书</td><td>药品名称、主要成分、宠物用药注意事项</td></tr>
+        </table>
+        <div class="warning-box">
+          <strong>⚠️ 免责声明：</strong>所有诊断结果页底部固定展示：「AI 分析仅供参考，不替代专业兽医诊断。如有疑虑，请及时就医。」
+        </div>
+      </div>
+
+      <!-- Section 6: Flow -->
+      <div class="section" id="flow">
+        <h2>六、业务流程图</h2>
+
+        <h3>主链路 A：健康异常检测 → 主人处理</h3>
+        <div class="mermaid">
+sequenceDiagram
+    participant 主人
+    participant App
+    participant NestJS后端
+    participant CareAI微服务
+    participant 智能设备
+
+    智能设备->>NestJS后端: 1. 上报健康指标数据（MQTT）
+    NestJS后端->>NestJS后端: 2. 指标阈值检测，发现体重异常
+    NestJS后端-->>主人: 3. 推送通知"毛球今天比上周轻了 8%"
+    主人->>App: 4. 点击通知查看预警详情
+    App-->>主人: 5. 展示预警卡片 + AI 行动建议
+    主人->>App: 6. 点击"向 CareAI 咨询"
+    App->>NestJS后端: 7. 发起问答请求
+    NestJS后端->>CareAI微服务: 8. 转发（含宠物档案 + sessionId）
+    CareAI微服务-->>NestJS后端: 9. 症状诊断专家回答（含就医建议）
+    NestJS后端-->>App: 10. 返回回答
+    App-->>主人: 11. 展示 AI 建议（症状诊断专家标识）
+    主人->>App: 12. 记录就医结果到健康档案
+        </div>
+
+        <h3>主链路 B：CareAI MoE 完整请求链路</h3>
+        <div class="mermaid">
+sequenceDiagram
+    participant 移动端
+    participant NestJS
+    participant CareAI微服务
+    participant Redis
+    participant PostgreSQL
+    participant ChromaDB
+    participant LLM
+
+    移动端->>NestJS: 1. 发送问题（sessionId + content）
+    NestJS->>PostgreSQL: 2. 查询宠物档案（Pet + HealthMetric）
+    NestJS->>CareAI微服务: 3. 转发请求（问题 + 宠物档案 + sessionId）
+    CareAI微服务->>Redis: 4. 取最近 6 轮短期对话
+    CareAI微服务->>PostgreSQL: 5. 取长期记忆摘要
+    CareAI微服务->>LLM: 6. 意图路由（Query Rewriting + 专家分类）
+    LLM-->>CareAI微服务: 7. 返回 {expert, confidence, rewritten_query}
+    CareAI微服务->>ChromaDB: 8. 向量检索（按 expert + species 预过滤）top-10
+    ChromaDB-->>CareAI微服务: 9. 返回候选知识片段
+    CareAI微服务->>CareAI微服务: 10. BGE Rerank → top-3
+    CareAI微服务->>CareAI微服务: 11. 检索置信度门控判断
+    CareAI微服务->>LLM: 12. 组装 Prompt → LLM 生成回答
+    LLM-->>CareAI微服务: 13. 返回回答
+    CareAI微服务->>Redis: 14. 更新短期记忆（同步）
+    CareAI微服务-->>NestJS: 15. 返回回答 + 专家信息
+    NestJS->>PostgreSQL: 16. 持久化消息
+    NestJS-->>移动端: 17. 返回结果
+    CareAI微服务->>LLM: 18. 异步更新长期记忆摘要（如有新事实）
+        </div>
+      </div>
+
+      <!-- Section 7: Exception -->
+      <div class="section" id="exception">
+        <h2>七、异常与边界处理</h2>
+        <table>
+          <tr><th>异常场景</th><th>系统处理 / 提示文案</th></tr>
+          <tr><td><strong>网络断开（AI 对话中）</strong></td><td>Toast："网络开小差了，消息已暂存，恢复后自动发送"</td></tr>
+          <tr><td><strong>CareAI 微服务不可用</strong></td><td>降级到基础关键词匹配回复；提示"AI 正在维护中，稍后重试"；主要功能不受影响</td></tr>
+          <tr><td><strong>LLM 调用超时（&gt;5s）</strong></td><td>提示："宠物有点忙，稍后再试" + 重试按钮；同时检查基础网络</td></tr>
+          <tr><td><strong>路由器报错（LLM 异常）</strong></td><td>自动降级到通用兜底专家，不阻塞用户</td></tr>
+          <tr><td><strong>检索置信度 &lt; 0.5</strong></td><td>返回兜底话术："这个问题超出了我目前的知识范围，建议带 [宠物名] 就医"；跳过 LLM 调用节省成本</td></tr>
+          <tr><td><strong>宠物档案为空（首次使用）</strong></td><td>全屏引导页：宠物插画 + "先来认识一下你的宠物吧～" + [开始建档] 按钮</td></tr>
+          <tr><td><strong>健康数据为空</strong></td><td>展示插画 + "还没有记录，今天就开始吧" + [记录今日健康] 按钮</td></tr>
+          <tr><td><strong>设备离线</strong></td><td>设备图标变灰 + 说明"设备暂时离线，请检查电源/网络"</td></tr>
+          <tr><td><strong>设备配对失败</strong></td><td>展示排错指南：检查设备电源 / 蓝牙开启 / 距离</td></tr>
+          <tr><td><strong>条形码识别失败</strong></td><td>提示"未能识别条形码，请手动输入疫苗名称"</td></tr>
+          <tr><td><strong>OCR 识别不准确</strong></td><td>预填结果可编辑，提示"识别结果仅供参考，请确认后提交"</td></tr>
+          <tr><td><strong>相册/相机权限未授权</strong></td><td>弹窗引导："需要相机权限才能拍照记录" + [去授权] 按钮</td></tr>
+          <tr><td><strong>疫苗提醒时间已过</strong></td><td>疫苗列表标记"已过期未接种"，红色高亮提醒</td></tr>
+          <tr><td><strong>Redis 短期记忆失效</strong></td><td>降级为无历史上下文对话；长期记忆摘要兜底</td></tr>
+        </table>
+      </div>
+
+      <!-- Section 8: AI Capability -->
+      <div class="section" id="ai">
+        <h2>八、AI 能力定位 <span class="tag tag-updated">v2.1 架构升级</span></h2>
+
+        <table>
+          <tr><th>触点</th><th>能力</th><th>v2.1 实现</th><th>预留扩展</th></tr>
+          <tr>
+            <td><strong>CareAI 健康知识问答</strong><br><small style="color:#94a3b8">对话级</small></td>
+            <td>回答宠物健康相关问题，提供连续对话护理建议</td>
+            <td>MoE 微服务：意图路由 + RAG + 两层记忆 + 幻觉控制</td>
+            <td>知识库持续扩充，多模态输入（图片 + 文字联合问答）</td>
+          </tr>
+          <tr>
+            <td><strong>AI 拍照诊断</strong><br><small style="color:#94a3b8">功能级</small></td>
+            <td>分析口腔/粪便/皮肤照片，解读报告，识别药品</td>
+            <td>v2.1 Mock 结果（UI 和流程完整），预留多模态 API 接口</td>
+            <td>接入多模态大模型 API（GPT-4o Vision / 混元多模态）</td>
+          </tr>
+          <tr>
+            <td><strong>健康异常检测</strong><br><small style="color:#94a3b8">模块级</small></td>
+            <td>检测体征异常、判断严重程度、给出分级行动建议</td>
+            <td>规则引擎 + 指标阈值判断</td>
+            <td>时序异常检测模型（ML），基于历史基线个性化判断</td>
+          </tr>
+          <tr>
+            <td><strong>成长报告生成</strong><br><small style="color:#94a3b8">对象级</small></td>
+            <td>读取月度数据，生成有温度的图文成长总结</td>
+            <td>模板 + 规则生成</td>
+            <td>LLM 生成情感化文案</td>
+          </tr>
+        </table>
+
+        <h3 id="ai-moe">8.1 CareAI MoE 架构</h3>
+
+        <h4>专家模块池</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 14px 0;">
+          <div class="expert-card">
+            <div class="expert-card-title">🩺 症状诊断专家</div>
+            <div class="expert-card-domain">身体异常 / 疾病判断</div>
+            <p style="font-size: 12px; color: #94a3b8; margin: 6px 0 0; line-height: 1.5;">"我的猫一直呕吐是怎么回事？"</p>
+          </div>
+          <div class="expert-card">
+            <div class="expert-card-title">🥗 饮食营养专家</div>
+            <div class="expert-card-domain">喂食 / 饮食禁忌 / 营养</div>
+            <p style="font-size: 12px; color: #94a3b8; margin: 6px 0 0; line-height: 1.5;">"柴犬能吃葡萄吗？"</p>
+          </div>
+          <div class="expert-card">
+            <div class="expert-card-title">💉 疫苗驱虫专家</div>
+            <div class="expert-card-domain">接种计划 / 驱虫周期</div>
+            <p style="font-size: 12px; color: #94a3b8; margin: 6px 0 0; line-height: 1.5;">"幼猫几个月打第一针？"</p>
+          </div>
+          <div class="expert-card">
+            <div class="expert-card-title">🧠 行为心理专家</div>
+            <div class="expert-card-domain">行为解读 / 情绪判断</div>
+            <p style="font-size: 12px; color: #94a3b8; margin: 6px 0 0; line-height: 1.5;">"猫咪为什么突然乱尿？"</p>
+          </div>
+          <div class="expert-card">
+            <div class="expert-card-title">🛁 日常护理专家</div>
+            <div class="expert-card-domain">洗澡 / 美容 / 运动 / 环境</div>
+            <p style="font-size: 12px; color: #94a3b8; margin: 6px 0 0; line-height: 1.5;">"多久给狗剪一次指甲？"</p>
+          </div>
+          <div class="expert-card" style="border-color: #f59e0b; border-left-color: #f59e0b;">
+            <div class="expert-card-title">🔄 通用兜底专家</div>
+            <div class="expert-card-domain">置信度低 / 跨域问题</div>
+            <p style="font-size: 12px; color: #94a3b8; margin: 6px 0 0; line-height: 1.5;">任何专家无法高置信分类的问题</p>
+          </div>
+        </div>
+
+        <h4>意图路由逻辑</h4>
+        <div class="mermaid">
+flowchart LR
+    Q["用户问题\n+ 对话历史（最近3轮）\n+ 宠物档案摘要"]
+    Q --> Router["意图路由器\n（1次LLM调用）"]
+    Router --> Output["{expert, confidence, rewritten_query}"]
+    Output --> Gate{confidence?}
+    Gate -- "≥ 0.75" --> Expert["路由到对应专家"]
+    Gate -- "< 0.75" --> Fallback["通用兜底专家"]
+    Gate -- "LLM报错" --> Fallback
+        </div>
+
+        <h4>置信度阈值策略</h4>
+        <div class="confidence-bar">
+          <div class="confidence-segment conf-high">≥ 0.75<br><span style="font-weight: 400; font-size: 11px;">路由到对应专家，正常生成</span></div>
+          <div class="confidence-segment conf-mid">0.5 ~ 0.75<br><span style="font-weight: 400; font-size: 11px;">降级生成 + 不确定性声明</span></div>
+          <div class="confidence-segment conf-low">&lt; 0.5<br><span style="font-weight: 400; font-size: 11px;">直接返回兜底话术，跳过 LLM</span></div>
+        </div>
+
+        <h3 id="ai-pipeline">8.2 完整请求管道（⑧ 步）</h3>
+        <div class="pipeline-step">
+          <div class="pipeline-step-num">①</div>
+          <div class="pipeline-step-content">
+            <div class="pipeline-step-title">加载记忆</div>
+            <div class="pipeline-step-desc">Redis 取最近 6 轮短期对话（按 sessionId）；PostgreSQL 取该宠物长期记忆摘要（按 petId）</div>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-step-num">②</div>
+          <div class="pipeline-step-content">
+            <div class="pipeline-step-title">Query Rewriting + 意图路由（1 次 LLM 调用）</div>
+            <div class="pipeline-step-desc">输入：原始问题 + 短期历史 + 宠物档案摘要；输出：{ expert, confidence, rewritten_query }；confidence &lt; 0.75 → 路由兜底专家</div>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-step-num">③</div>
+          <div class="pipeline-step-content">
+            <div class="pipeline-step-title">向量检索</div>
+            <div class="pipeline-step-desc">ChromaDB 按 { expert, species } 预过滤，检索 top-10 相关知识片段</div>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-step-num">④</div>
+          <div class="pipeline-step-content">
+            <div class="pipeline-step-title">BGE Rerank</div>
+            <div class="pipeline-step-desc">Cross-Encoder 精排（BAAI/bge-reranker-base，本地运行），保留 top-3 知识片段</div>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-step-num">⑤</div>
+          <div class="pipeline-step-content">
+            <div class="pipeline-step-title">检索置信度门控</div>
+            <div class="pipeline-step-desc">最高相似度 ≥ 0.75 → 正常生成；0.5~0.75 → 降级生成（附不确定性声明）；&lt; 0.5 → 直接返回兜底话术，跳过 LLM 调用</div>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-step-num">⑥</div>
+          <div class="pipeline-step-content">
+            <div class="pipeline-step-title">组装 Prompt</div>
+            <div class="pipeline-step-desc">System Prompt（专家人设 + 硬约束）+ 长期记忆摘要 + 宠物档案 + RAG 知识片段（top-3）+ 短期对话历史（最近 6 轮）+ 改写后的问题</div>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-step-num">⑦</div>
+          <div class="pipeline-step-content">
+            <div class="pipeline-step-title">LLM 生成回答</div>
+            <div class="pipeline-step-desc">国内模型 API（DeepSeek / 通义千问 / 智谱 GLM）；所有专家硬约束：不能编造医疗建议，严重症状必须附就医提示</div>
+          </div>
+        </div>
+        <div class="pipeline-step">
+          <div class="pipeline-step-num">⑧</div>
+          <div class="pipeline-step-content">
+            <div class="pipeline-step-title">异步更新长期记忆</div>
+            <div class="pipeline-step-desc">判断本轮是否产生新事实（确诊/过敏/健康事件/跟进建议）→ 是则追加长期记忆摘要（1 次轻量 LLM 调用）；否则跳过</div>
+          </div>
+        </div>
+
+        <h3 id="ai-memory">8.3 记忆管理</h3>
+        <table>
+          <tr><th>类型</th><th>存储</th><th>内容</th><th>生命周期</th></tr>
+          <tr>
+            <td><strong>短期记忆</strong></td>
+            <td>Redis</td>
+            <td>最近 6 轮完整对话原文（user + assistant）</td>
+            <td>会话级，session 关闭后过期；覆盖一个完整"症状描述 → 追问 → 建议"对话链，不超过 8k context 安全线</td>
+          </tr>
+          <tr>
+            <td><strong>长期记忆</strong></td>
+            <td>PostgreSQL</td>
+            <td>AI 提炼的关键事实摘要（确诊疾病/过敏/健康事件/跟进建议）</td>
+            <td>持久化，跨 session 保留；超出短期记忆范围时作为兜底上下文</td>
+          </tr>
+        </table>
+
+        <div class="highlight-box" style="margin-top: 12px;">
+          <strong>长期记忆内容示例：</strong>
+          <ul class="mt-2">
+            <li>主人多次询问食欲问题，宠物已确认为肠胃炎（2026-04-10）</li>
+            <li>该猫对鱼肉过敏，已记录</li>
+            <li>上周完成第二针三联疫苗接种</li>
+            <li>AI 建议每月复查体重，主人已知晓</li>
+          </ul>
+        </div>
+
+        <h4>长期记忆更新触发条件</h4>
+        <ul>
+          <li>确诊 / 疑诊了某种疾病</li>
+          <li>发现了过敏 / 饮食禁忌信息</li>
+          <li>主人明确告知了某个健康事件</li>
+          <li>AI 给出了需要后续跟进的建议</li>
+        </ul>
+
+        <h3 id="ai-hallucination">8.4 幻觉控制</h3>
+        <table>
+          <tr><th>相似度区间</th><th>策略</th><th>是否调用 LLM</th></tr>
+          <tr>
+            <td>≥ 0.75</td>
+            <td>正常生成，基于知识片段回答</td>
+            <td>✅ 是</td>
+          </tr>
+          <tr>
+            <td>0.5 ~ 0.75</td>
+            <td>降级生成，附不确定性声明：「以下仅供参考，建议咨询专业宠物医生确认」</td>
+            <td>✅ 是</td>
+          </tr>
+          <tr>
+            <td>&lt; 0.5</td>
+            <td>直接返回兜底话术，不生成（节省成本）：「这个问题超出了我目前的知识范围，建议带 [宠物名] 去宠物医院做专业检查」</td>
+            <td>❌ 否</td>
+          </tr>
+        </table>
+
+        <div class="purple-box" style="margin-top: 14px;">
+          <strong>所有专家 System Prompt 硬约束：</strong>
+          <ul class="mt-2">
+            <li>只能基于「参考知识」中提供的内容作答</li>
+            <li>若参考知识不足，必须明确告知用户「我暂时没有关于这个问题的可靠信息」</li>
+            <li>绝对不能凭空推测或编造医疗建议</li>
+            <li>对于严重症状（出血、抽搐、呼吸困难、超过 24 小时不进食），必须在回答末尾附上「请立即就医」</li>
+            <li>若问题与宠物健康无关，礼貌拒绝并引导回正题</li>
+          </ul>
+        </div>
+
+        <h3 id="ai-eval">8.5 评估体系</h3>
+        <table>
+          <tr><th>维度</th><th>指标</th><th>目标值</th></tr>
+          <tr>
+            <td rowspan="3"><strong>检索质量（RAG 层）</strong></td>
+            <td>Hit Rate @3（top-3 中至少有 1 条相关）</td>
+            <td>≥ 85%</td>
+          </tr>
+          <tr>
+            <td>MRR（最相关片段平均排名倒数）</td>
+            <td>≥ 0.75</td>
+          </tr>
+          <tr>
+            <td>Rerank 提升率（top-1 准确率提升）</td>
+            <td>≥ 15%</td>
+          </tr>
+          <tr>
+            <td rowspan="4"><strong>回答质量（LLM 层）</strong></td>
+            <td>忠实度 Faithfulness（无幻觉）</td>
+            <td>LLM-as-Judge</td>
+          </tr>
+          <tr>
+            <td>相关性 Relevance（是否切题）</td>
+            <td>LLM-as-Judge</td>
+          </tr>
+          <tr>
+            <td>安全性（严重症状给出就医提示）</td>
+            <td>人工规则集</td>
+          </tr>
+          <tr>
+            <td>拒绝率（非宠物健康问题正确拒绝）</td>
+            <td>越界问题测试集</td>
+          </tr>
+          <tr>
+            <td rowspan="3"><strong>路由质量（MoE 层）</strong></td>
+            <td>路由准确率（分配到正确专家）</td>
+            <td>≥ 90%</td>
+          </tr>
+          <tr>
+            <td>兜底触发率（走兜底专家的比例）</td>
+            <td>≤ 15%</td>
+          </tr>
+          <tr>
+            <td>平均置信度</td>
+            <td>≥ 0.80</td>
+          </tr>
+        </table>
+        <p style="font-size: 13px; color: #64748b; margin-top: 8px;">评估工具链：人工标注 100 条问答对 → RAGAS 框架自动评估 → LLM-as-Judge 回答质量 → 每次知识库更新后自动跑评估对比版本间指标变化</p>
+      </div>
+
+      <!-- Section 9: Competitor -->
+      <div class="section" id="competitor">
+        <h2>九、竞品对比与差异化亮点</h2>
+
+        <h3>竞品格局</h3>
+        <table>
+          <tr><th>产品</th><th>定位</th><th>强项</th><th>弱项</th></tr>
+          <tr>
+            <td><strong>宠物说</strong></td>
+            <td>宠物社区 + 健康工具</td>
+            <td>社区活跃度高，内容丰富</td>
+            <td>AI 功能薄弱，问答质量低，无记忆连续性</td>
+          </tr>
+          <tr>
+            <td><strong>爱宠助手</strong></td>
+            <td>健康记录工具</td>
+            <td>功能全，数据记录详细</td>
+            <td>交互冷，无情感连接，无 AI 问答能力</td>
+          </tr>
+          <tr>
+            <td><strong>AI 宠物智能设备类</strong></td>
+            <td>硬件 + 互动</td>
+            <td>实体互动感强</td>
+            <td>硬件门槛高，软件健康管理弱，无专业知识体系</td>
+          </tr>
+          <tr>
+            <td><strong>通用 AI 助手（ChatGPT 等）</strong></td>
+            <td>通用问答</td>
+            <td>覆盖广，能回答宠物问题</td>
+            <td>无宠物专属知识库，无宠物档案上下文，无记忆，幻觉风险高</td>
+          </tr>
+        </table>
+
+        <h3>差异化亮点</h3>
+
+        <h4>亮点一：MoE 专家路由 + RAG，可信的宠物健康知识问答</h4>
+        <blockquote>通用 AI 助手对宠物健康问题的幻觉率高、边界不清晰；现有宠物 App 的问答停留在关键词匹配层面。PawMind CareAI 的根本区别在于：用专领域知识库 + MoE 路由架构保证回答的可信度，用三档置信度门控防止输出不确定内容。</blockquote>
+        <ul>
+          <li>5 个领域专家（症状/饮食/疫苗/行为/护理）+ 通用兜底，问题精准分发</li>
+          <li>三档置信度门控：知识不足时主动承认，不编造医疗建议</li>
+          <li>严重症状硬约束触发就医提示，产品级安全保障</li>
+          <li>RAGAS 框架持续评估 RAG 质量，不靠感觉迭代</li>
+        </ul>
+
+        <h4>亮点二：两层记忆管理，真正的连续对话体验</h4>
+        <blockquote>现有宠物 AI 每次对话都从头开始，主人需要反复说明宠物情况。PawMind CareAI 通过短期 + 长期两层记忆，让 AI 像真正认识这只宠物一样持续跟进健康状况。</blockquote>
+        <ul>
+          <li>短期记忆（Redis）：保留当次 session 最近 6 轮，覆盖完整症状描述链</li>
+          <li>长期记忆（PostgreSQL）：AI 自动提炼关键健康事实，跨 session 持久化</li>
+          <li>新 session 自动载入宠物档案 + 长期记忆，对话立刻有上下文</li>
+        </ul>
+
+        <h4>亮点三：AI 健康管家，数据驱动决策</h4>
+        <blockquote>现有产品健康功能停留在数据记录层面，遇到异常主人仍然不知道怎么办。PawMind 不只记录数据，还告诉你该怎么做。</blockquote>
+        <ul>
+          <li>AI 分级预警直接给出行动建议（观察/调整饮食/立即就医）</li>
+          <li>预警一键接入 CareAI 详细咨询，从发现到解决闭环</li>
+          <li>健康档案历史数据可在就医时提供给宠医参考</li>
+        </ul>
+
+        <h4>亮点四：设备即服务，软硬一体化</h4>
+        <blockquote>健康指标卡与智能设备深度绑定，未绑定 = 营销机会，绑定 = 数据驱动价值闭环。</blockquote>
+        <ul>
+          <li>已绑定设备：指标卡显示实时数据 + 趋势</li>
+          <li>未绑定设备：指标卡显示「解锁功能」引导 + 设备商城直达</li>
+          <li>一站式设备管理，无需多 App 切换</li>
+        </ul>
+      </div>
+
+      <!-- Section 10: Principles -->
+      <div class="section" id="principles">
+        <h2>十、设计原则</h2>
+        <table>
+          <tr><th>原则</th><th>说明</th></tr>
+          <tr>
+            <td><strong>数据驱动决策</strong></td>
+            <td>健康指标给出明确的正常/异常判断和行动建议，不让主人自己解读原始数据</td>
+          </tr>
+          <tr>
+            <td><strong>AI 透明可信</strong></td>
+            <td>所有 AI 分析结果附带免责声明；知识不足时主动承认，不过度承诺 AI 能力；置信度低时明确告知用户</td>
+          </tr>
+          <tr>
+            <td><strong>设备即服务</strong></td>
+            <td>未绑定设备 = 营销机会，用「解锁功能」的方式引导用户购买设备；不强制要求设备才能使用基础功能</td>
+          </tr>
+          <tr>
+            <td><strong>输入零门槛</strong></td>
+            <td>提供多种输入方式（打字/OCR/语音/扫码），每种记录方式追求「3 秒内完成」</td>
+          </tr>
+          <tr>
+            <td><strong>降级而非崩溃</strong></td>
+            <td>AI 服务不可用时保留基础功能；CareAI 微服务故障时降级为关键词匹配；不因 AI 不可用让 App 整体瘫痪</td>
+          </tr>
+          <tr>
+            <td><strong>情感优先于功能</strong></td>
+            <td>当功能和情感体验冲突时，优先保证情感连接感；通知文案用拟人化表达，减少冷冰冰的系统感</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Section 11: Tech -->
+      <div class="section" id="tech">
+        <h2>十一、技术要点</h2>
+
+        <h3>11.1 主应用技术栈</h3>
+        <table>
+          <tr><th>层级</th><th>技术选型</th><th>说明</th></tr>
+          <tr><td><strong>移动端</strong></td><td>React Native + Expo</td><td>跨平台 iOS/Android</td></tr>
+          <tr><td><strong>状态管理</strong></td><td>Zustand</td><td>轻量，适合中等复杂度状态</td></tr>
+          <tr><td><strong>后端</strong></td><td>NestJS + TypeORM</td><td>JWT 鉴权、宠物档案组装、消息持久化</td></tr>
+          <tr><td><strong>数据库</strong></td><td>PostgreSQL</td><td>主数据库，复用于 CareAI 长期记忆</td></tr>
+          <tr><td><strong>推送通知</strong></td><td>iOS APNs + Android FCM</td><td>异常预警 + 疫苗提醒</td></tr>
+          <tr><td><strong>图片存储</strong></td><td>CDN + OSS</td><td>成长日记 + 诊断图片</td></tr>
+          <tr><td><strong>设备联动</strong></td><td>MQTT 协议</td><td>智能设备数据上报</td></tr>
+        </table>
+
+        <h3>11.2 CareAI 微服务技术栈 <span class="tag tag-new">v2.1 新增</span></h3>
+        <table>
+          <tr><th>组件</th><th>选型</th><th>说明</th></tr>
+          <tr><td><strong>微服务框架</strong></td><td>Python + FastAPI</td><td>纯 AI 逻辑，无直接鉴权职责</td></tr>
+          <tr><td><strong>LLM 编排</strong></td><td>LangChain</td><td>Prompt 管理、LLM 调用、链式处理</td></tr>
+          <tr><td><strong>向量数据库</strong></td><td>ChromaDB（本地）</td><td>按 expert + species 元数据预过滤</td></tr>
+          <tr><td><strong>向量模型</strong></td><td>BAAI/bge-large-zh-v1.5（本地）</td><td>中文最优，免费本地运行</td></tr>
+          <tr><td><strong>Reranker</strong></td><td>BAAI/bge-reranker-base（本地）</td><td>Cross-Encoder 精排，免费本地运行</td></tr>
+          <tr><td><strong>短期记忆</strong></td><td>Redis</td><td>最近 6 轮对话，会话级</td></tr>
+          <tr><td><strong>长期记忆</strong></td><td>PostgreSQL（复用 PawMind DB）</td><td>宠物健康关键事实摘要，跨 session</td></tr>
+          <tr><td><strong>LLM API</strong></td><td>DeepSeek / 通义千问 / 智谱 GLM</td><td>国内模型，支持快速切换</td></tr>
+          <tr><td><strong>评估框架</strong></td><td>RAGAS</td><td>RAG 质量自动评估</td></tr>
+        </table>
+
+        <h3>11.3 系统边界说明</h3>
+        <pre><code>PawMind 移动端
+    ↕ HTTP/JSON（现有 API 不变，移动端无感知 AI 架构）
+PawMind NestJS 后端
+    ↕ HTTP 内部调用（新增转发逻辑）
+CareAI 微服务（Python FastAPI）
+    ├── 意图路由器（LLM 分类）
+    ├── 专家模块池（5 个领域 + 通用兜底）
+    ├── 记忆管理层（Redis 短期 + PostgreSQL 长期）
+    ├── RAG 管道（ChromaDB + BGE + Rerank + 门控）
+    └── LLM 调用层（国内模型 API）
+ChromaDB（本地向量数据库）
+Redis（短期记忆）
+PostgreSQL（长期记忆，复用 PawMind 现有数据库）</code></pre>
+
+        <div class="highlight-box">
+          <strong>职责边界：</strong>
+          <ul class="mt-2">
+            <li><strong>移动端</strong>：发送问题 + sessionId，无需感知 AI 架构细节</li>
+            <li><strong>NestJS</strong>：JWT 鉴权、从 DB 组装宠物档案、转发 CareAI 微服务、持久化消息</li>
+            <li><strong>CareAI 微服务</strong>：纯 AI 逻辑（路由、专家调度、RAG、LLM、记忆管理），无直接鉴权职责</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Section 12: Roadmap -->
+      <div class="section" id="roadmap">
+        <h2>十二、版本演进规划</h2>
+        <table>
+          <tr><th>版本</th><th>目标</th><th>状态</th></tr>
+          <tr>
+            <td><strong>v1.0 MVP</strong></td>
+            <td>建档 → AI 对话 → 健康录入 → 成长记录，验证 AI 陪伴情感价值</td>
+            <td class="status-done">✅ 已完成</td>
+          </tr>
+          <tr>
+            <td><strong>v2.0 AI 健康管理</strong></td>
+            <td>健康管理升级（多渠道数据 + 可视化 + 设备管理）+ CareAI（关键词匹配问答 + 拍照诊断）+ 疫苗本 + 健康档案</td>
+            <td class="status-done">✅ 已完成</td>
+          </tr>
+          <tr>
+            <td><strong>v2.1 MoE CareAI</strong></td>
+            <td>CareAI 升级为独立微服务：MoE 路由架构 + RAG 知识检索 + 两层记忆管理 + 幻觉控制 + 评估体系</td>
+            <td class="status-progress">🚧 开发中</td>
+          </tr>
+          <tr>
+            <td><strong>v2.5 多模态诊断</strong></td>
+            <td>AI 拍照诊断接入真实多模态 API（GPT-4o Vision / 混元多模态）；健康异常检测升级为基于历史基线的个性化 ML 模型</td>
+            <td class="status-plan">📋 规划中</td>
+          </tr>
+          <tr>
+            <td><strong>v3.0 社区 + 行为分析</strong></td>
+            <td>宠物社区 + AI 行为分析 + 多人共养 / 宠物社交；CareAI 知识库开放共建</td>
+            <td class="status-plan">📋 规划中</td>
+          </tr>
+        </table>
+
+        <div class="success-box" style="margin-top: 16px;">
+          <strong>v2.1 里程碑检查清单：</strong>
+          <ul class="mt-2">
+            <li>☐ CareAI FastAPI 微服务搭建，接口规范文档（pawmind/docs/design/2026-04-16-careai-api-spec.md）</li>
+            <li>☐ 意图路由器：LLM 分类 Prompt + 置信度评分 + Query Rewriting</li>
+            <li>☐ ChromaDB 知识库初始化（基础层 + 品种层，覆盖 5 个专家分区）</li>
+            <li>☐ BGE 向量模型 + Reranker 本地部署</li>
+            <li>☐ Redis 短期记忆 + PostgreSQL 长期记忆集成</li>
+            <li>☐ NestJS 转发逻辑，宠物档案组装</li>
+            <li>☐ 移动端专家标识展示 + 置信度声明 UI</li>
+            <li>☐ RAGAS 评估测试集构建（100 条问答对）+ 自动评估 Pipeline</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="section" style="text-align: center; color: #94a3b8; font-size: 13px;">
+        <p>文档版本：v2.1 | 更新日期：2026-04-16</p>
+        <p style="margin-top: 4px;">更新内容：整合 CareAI MoE 微服务架构设计（意图路由 + 专家模块 + RAG + 两层记忆 + 幻觉控制 + 评估体系）；新增第三节核心页面；对齐 fullstack-product-dev v2.1 技能标准</p>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // Mermaid
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      flowchart: { useMaxWidth: true, htmlLabels: true },
+      sequence: { useMaxWidth: true }
+    });
+
+    // TOC Active State
+    const headings = document.querySelectorAll('div.section [id], div.section h1[id], div.section h2[id], div.section h3[id]');
+    const tocLinks = document.querySelectorAll('.toc a');
+
+    function updateActiveLink() {
+      let current = '';
+      headings.forEach(h => {
+        if (window.scrollY >= h.offsetTop - 120) {
+          current = h.getAttribute('id');
+        }
+      });
+      tocLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) {
+          link.classList.add('active');
+        }
+      });
+    }
+
+    window.addEventListener('scroll', updateActiveLink);
+    updateActiveLink();
+
+    // Smooth scroll
+    tocLinks.forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(link.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+  <!-- Back to Top Button -->
+  <button id="back-to-top" title="返回顶部" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="18 15 12 9 6 15"></polyline>
+    </svg>
+  </button>
+
+  <script>
+    // Back to top visibility
+    const backToTopBtn = document.getElementById('back-to-top');
+    const mainScrollEl = document.querySelector('.main-content') || window;
+
+    function handleScroll() {
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      if (scrollY > 300) {
+        backToTopBtn.classList.add('visible');
+      } else {
+        backToTopBtn.classList.remove('visible');
+      }
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+  </script>
+
+  <!-- Version Switcher: Position-Sync Logic -->
+  <script>
+    /**
+     * 版本 anchor 映射表
+     * key = 当前版本 (v2.1) 的 anchor
+     * value = 目标版本 (v2.0) 对应的 anchor
+     * 若某 anchor 在目标版本不存在，则 fallback 到离它最近的父节点
+     */
+    const ANCHOR_MAP_v21_TO_v20 = {
+      // 基础信息
+      'project-info': 'overview',      // v2.1 独有 → fallback 到概述
+      'overview':     'overview',
+      // 产品架构
+      'architecture':    'architecture',
+      'arch-structure':  'arch-structure',
+      'arch-hierarchy':  'arch-hierarchy',
+      'arch-data':       'arch-data',
+      // 用户分析
+      'users':           'users',
+      'user-persona':    'user-persona',
+      'user-journey':    'user-journey',
+      // 核心页面（v2.1 独有）
+      'pages':           'features',   // fallback 到功能清单
+      // 功能清单
+      'features':        'features',
+      'feat-health':     'feat-health',
+      'feat-device':     'feat-device',
+      'feat-record':     'feat-record',
+      'feat-vaccine':    'feat-vaccine',
+      'feat-careai':     'feat-careai',
+      // 详细设计
+      'design':              'design',
+      'design-health':       'design-health',
+      'design-device':       'design-device',
+      'design-record':       'design-record',
+      'design-vaccine':      'design-vaccine',
+      'design-careai-chat':  'design-careai',   // v2.1 → v2.0 CareAI 详设
+      'design-diagnosis':    'design-diagnosis',
+      // 流程与异常
+      'flow':      'flow',
+      'exception': 'exception',
+      // AI 能力（v2.1 细分节 fallback 到 ai）
+      'ai':              'ai',
+      'ai-moe':          'ai',
+      'ai-pipeline':     'ai',
+      'ai-memory':       'ai',
+      'ai-hallucination':'ai',
+      'ai-eval':         'ai',
+      // 战略
+      'competitor':  null,
+      'principles':  'principles',
+      'tech':        'tech',
+      'roadmap':     'roadmap',
+    };
+
+    /**
+     * 获取当前视口内最靠近顶部的 section anchor
+     */
+    function getCurrentAnchor() {
+      const allAnchors = document.querySelectorAll('[id]');
+      let best = null;
+      let bestTop = Infinity;
+      const viewportMid = window.scrollY + 160; // 视口顶部偏移量
+
+      allAnchors.forEach(el => {
+        const top = el.offsetTop;
+        if (top <= viewportMid && viewportMid - top < bestTop) {
+          bestTop = viewportMid - top;
+          best = el.id;
+        }
+      });
+      return best;
+    }
+
+    /**
+     * 版本切换：跳转到目标版本，并尽量保持位置
+     */
+    function switchVersion(targetVersion) {
+      if (targetVersion === 'v2.1') return; // 当前版本，不跳
+
+      const currentAnchor = getCurrentAnchor();
+      let targetAnchor = '';
+
+      if (currentAnchor && ANCHOR_MAP_v21_TO_v20[currentAnchor]) {
+        targetAnchor = '#' + ANCHOR_MAP_v21_TO_v20[currentAnchor];
+      } else if (currentAnchor) {
+        // 没有映射条目，直接尝试同名 anchor（通用 id 都一样）
+        targetAnchor = '#' + currentAnchor;
+      }
+
+      location.href = 'PawMind-PRD-' + targetVersion + '.html' + targetAnchor;
+    }
+
+    // 页面加载时：若 URL 带有 hash，平滑滚动到目标位置
+    (function () {
+      if (location.hash) {
+        const el = document.querySelector(location.hash);
+        if (el) {
+          // 延迟一帧，确保布局渲染完成
+          setTimeout(() => {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 200);
+        }
+      }
+    })();
+  </script>
+
+</body>
+</html>
