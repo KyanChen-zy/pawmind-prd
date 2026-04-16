@@ -4,7 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PawMind — AI 宠物健康管理平台 | PRD v2.1</title>
+  <meta name="version" content="v2.1">
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 笔记组件 -->
+  <link rel="stylesheet" href="../note-panel/note-panel.css">
   <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -186,7 +189,7 @@
 
     /* Back to Top Button */
     #back-to-top {
-      position: fixed; right: 28px; bottom: 32px; z-index: 999;
+      position: fixed; right: calc(420px + 28px); bottom: 96px; z-index: 60;
       width: 44px; height: 44px; border-radius: 50%;
       background: linear-gradient(135deg, #3b82f6, #8b5cf6);
       color: white; border: none; cursor: pointer;
@@ -205,6 +208,19 @@
     }
     #back-to-top svg { width: 20px; height: 20px; }
 
+    /* 笔记悬浮按钮定位在中间 PRD 区域 */
+    .note-fab {
+      right: calc(420px + 24px);
+      bottom: 24px;
+      z-index: 60;
+    }
+    /* 笔记面板也跟随定位 */
+    .note-panel {
+      right: calc(420px + 24px);
+      bottom: 96px;
+      z-index: 60;
+    }
+
     @media print {
       .toc, .header-bar, .right-sidebar { display: none; }
       .main-content { margin-left: 0; margin-right: 0; }
@@ -212,6 +228,9 @@
     @media (max-width: 1400px) {
       .right-sidebar { display: none; }
       .main-content { margin-right: 0; }
+      .note-fab { right: 24px; }
+      .note-panel { right: 24px; }
+      #back-to-top { right: 28px; }
     }
   </style>
 </head>
@@ -1716,6 +1735,18 @@ PostgreSQL（长期记忆，复用 PawMind 现有数据库）</code></pre>
         }
       }
     })();
+  </script>
+
+  <!-- 笔记组件 -->
+  <script src="../note-panel/note-panel.js"></script>
+  <script>
+    new NotePanel({
+      globalNotesFile: '../note-panel/notes/overall-notes.json',
+      versionNotesFile: '../note-panel/notes/version-notes-v2.1.json',
+      onUpdate: (data, type) => {
+        console.log('笔记已更新:', type, data);
+      }
+    });
   </script>
 
 </body>
