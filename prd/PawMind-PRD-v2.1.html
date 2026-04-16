@@ -217,6 +217,118 @@
 </head>
 <body>
 
+  <!-- Dynamic Version Update Banner -->
+  <div id="prd-update-banner" style="display:none;
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    z-index: 999; align-items: center; gap: 10px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white;
+    padding: 10px 20px; border-radius: 50px;
+    box-shadow: 0 4px 20px rgba(99,102,241,0.45); cursor: pointer;
+    font-size: 13px; font-weight: 600; letter-spacing: 0.02em;
+    transition: transform 0.2s, box-shadow 0.2s;
+    animation: bannerSlideIn 0.5s ease-out; white-space: nowrap;">
+    <span style="font-size:16px;">🚀</span>
+    <span id="prd-banner-text"></span>
+    <span style="background:rgba(255,255,255,0.2);padding:2px 9px;border-radius:20px;font-size:11px;margin-left:2px;">NEW</span>
+    <span style="margin-left:6px;opacity:0.7;font-size:16px;line-height:1;padding:0 2px;"
+      onclick="event.stopPropagation();document.getElementById('prd-update-banner').style.display='none';"
+      title="关闭">✕</span>
+  </div>
+
+  <style>
+    @keyframes bannerSlideIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+  </style>
+
+  <script>
+  (function () {
+    // ── 当前文件版本配置 ──────────────────────────────
+    var CURRENT_VERSION = [2, 1]; // [major, minor]
+    var FILE_PREFIX     = 'PawMind-PRD-v';
+    var FILE_SUFFIX     = '.html';
+    // ─────────────────────────────────────────────────
+
+    function versionStr(major, minor) {
+      return major + '.' + minor;
+    }
+    function fileName(major, minor) {
+      return FILE_PREFIX + versionStr(major, minor) + FILE_SUFFIX;
+    }
+
+    // file:// 协议下 fetch 不可用，用同步 XHR 检测文件是否存在
+    function fileExistsSync(url) {
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('HEAD', url, false); // 同步请求
+        xhr.send();
+        return xhr.status === 200;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    var isFileProtocol = location.protocol === 'file:';
+
+    function probeNext(major, minor, latestFound, latestFile, resolve) {
+      var nextMinor = minor + 1;
+      var url = fileName(major, nextMinor);
+
+      if (isFileProtocol) {
+        // file:// 协议：同步探测
+        if (fileExistsSync(url)) {
+          probeNext(major, nextMinor, [major, nextMinor], url, resolve);
+        } else {
+          resolve(latestFound, latestFile);
+        }
+      } else {
+        // http(s):// 协议：异步探测
+        fetch(url, { method: 'HEAD' })
+          .then(function (res) {
+            if (res.ok) {
+              probeNext(major, nextMinor, [major, nextMinor], url, resolve);
+            } else {
+              resolve(latestFound, latestFile);
+            }
+          })
+          .catch(function () {
+            resolve(latestFound, latestFile);
+          });
+      }
+    }
+
+    function showBanner(version, file) {
+      var banner = document.getElementById('prd-update-banner');
+      var text   = document.getElementById('prd-banner-text');
+      text.textContent = 'v' + versionStr(version[0], version[1]) + ' 版本已发布 — 点击查看更新内容';
+      banner.style.display = 'flex';
+      banner.onclick = function (e) {
+        if (e.target.title === '关闭') return;
+        window.location.href = file;
+      };
+      banner.onmouseover = function () {
+        banner.style.transform = 'translateX(-50%) scale(1.05)';
+        banner.style.boxShadow = '0 6px 28px rgba(99,102,241,0.6)';
+      };
+      banner.onmouseout = function () {
+        banner.style.transform = 'translateX(-50%) scale(1)';
+        banner.style.boxShadow = '0 4px 20px rgba(99,102,241,0.45)';
+      };
+    }
+
+    probeNext(
+      CURRENT_VERSION[0], CURRENT_VERSION[1],
+      null, null,
+      function (latestVersion, latestFile) {
+        if (latestVersion) {
+          showBanner(latestVersion, latestFile);
+        }
+      }
+    );
+  })();
+  </script>
+
   <!-- Table of Contents -->
   <nav class="toc">
     <div class="p-4 border-b border-gray-200">
