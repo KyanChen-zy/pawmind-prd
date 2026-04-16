@@ -1,8 +1,9 @@
 /**
  * 笔记悬浮面板核心逻辑
  * 存储策略：
- *   - 本地 (file://) → File System Access API，自动写入 notes/ 下的 JSON 文件
- *   - 在线 (http/https) → localStorage
+ *   - 加载：优先 fetch 读取 notes/ 下的 JSON 文件，失败则降级 localStorage
+ *   - 保存（本地 file://）：File System Access API 写入 JSON 文件，降级 localStorage
+ *   - 保存（在线 http/https）：localStorage
  */
 
 class NotePanel {
@@ -203,32 +204,31 @@ class NotePanel {
 
   /** 加载笔记 */
   async _loadNotes() {
-    if (this.isLocal) {
-      // 本地模式：优先用 File System Access API 读取，否则用 fetch，最后降级 localStorage
-      if (this._fsHandles) {
-        try {
-          this.globalNotes = await this._readJsonFile(this._fsHandles.global, this._fileNames.global);
-          this.versionNotes = await this._readJsonFile(this._fsHandles.version, this._fileNames.version);
-        } catch (e) {
-          console.warn('从文件系统加载笔记失败，尝试 fetch:', e);
-          this.globalNotes = (await this._fetchJsonFile(this._fileNames.global)) || [];
-          this.versionNotes = (await this._fetchJsonFile(this._fileNames.version)) || [];
-        }
-      } else {
-        // 尝试 fetch 读取（需本地 HTTP 服务，file:// 下会失败）
-        const globalData = await this._fetchJsonFile(this._fileNames.global);
-        const versionData = await this._fetchJsonFile(this._fileNames.version);
-        if (globalData !== null || versionData !== null) {
-          this.globalNotes = globalData || [];
-          this.versionNotes = versionData || [];
-        } else {
-          // fetch 也失败，降级到 localStorage
-          this._loadGlobalNotes();
-          this._loadVersionNotes();
-        }
+    // 统一优先从 JSON 文件读取（fetch），失败则降级到 localStorage
+    if (this.isLocal && this._fsHandles) {
+      // 本地有文件系统句柄：用 File System Access API 读取
+      try {
+        this.globalNotes = await this._readJsonFile(this._fsHandles.global, this._fileNames.global);
+        this.versionNotes = await this._readJsonFile(this._fsHandles.version, this._fileNames.version);
+        this._renderNotes();
+        this._updateBadge();
+        return;
+      } catch (e) {
+        console.warn('从文件系统加载笔记失败，尝试 fetch:', e);
       }
+    }
+
+    // 尝试 fetch 读取 JSON 文件（GitHub Pages / 本地 HTTP 服务）
+    const globalData = await this._fetchJsonFile(this._fileNames.global);
+    const versionData = await this._fetchJsonFile(this._fileNames.version);
+    if (globalData !== null) {
+      this.globalNotes = globalData;
     } else {
       this._loadGlobalNotes();
+    }
+    if (versionData !== null) {
+      this.versionNotes = versionData;
+    } else {
       this._loadVersionNotes();
     }
     this._renderNotes();

@@ -20,12 +20,27 @@
 
 ## 存储策略
 
-根据访问方式自动选择存储后端：
+### 加载（统一策略）
 
-| 环境 | 判断条件 | 保存方式 | 加载方式 |
-|------|---------|---------|---------|
-| 本地打开 | `file://` 协议 | File System Access API → `notes/*.json` | 从 JSON 文件读取 |
-| GitHub Pages | `http://` / `https://` 协议 | localStorage | localStorage |
+无论本地还是在线，加载时**统一优先 fetch 读取 JSON 文件**，读取失败则降级到 localStorage：
+
+| 优先级 | 方式 | 说明 |
+|--------|------|------|
+| 1 | fetch → `notes/*.json` | GitHub Pages 和本地 HTTP 服务均支持 |
+| 2 | localStorage | fetch 失败时的降级方案 |
+
+**JSON 文件路径**（相对于 HTML 所在目录）：
+- 全局笔记 → `../note-panel/notes/overall-notes.json`
+- 版本笔记 → `../note-panel/notes/version-notes-{版本号}.json`
+
+### 保存（按环境区分）
+
+| 环境 | 判断条件 | 保存方式 |
+|------|---------|---------|
+| 本地打开 | `file://` 协议 | File System Access API → `notes/*.json`，降级 localStorage |
+| GitHub Pages | `http://` / `https://` 协议 | localStorage（无法写入服务器文件） |
+
+**注意**：GitHub Pages 上记的笔记只保存在浏览器 localStorage 中，不会写回 JSON 文件。如需持久化，请在本地打开 PRD 文件操作。
 
 ### 本地模式（File System Access API）
 
