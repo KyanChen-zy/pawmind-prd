@@ -1472,8 +1472,6 @@ sequenceDiagram
   <script src="../note-panel/note-panel.js"></script>
   <script>
     new NotePanel({
-      globalNotesFile: '../note-panel/notes/overall-notes.json',
-      versionNotesFile: '../note-panel/notes/version-notes-v2.0.json',
       onUpdate: (data, type) => {
         console.log('笔记已更新:', type, data);
       }

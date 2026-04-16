@@ -1,16 +1,22 @@
 /**
  * 笔记悬浮面板核心逻辑
- * 支持：全局笔记（JSON文件 + localStorage缓存）+ 版本笔记（JSON文件存储）
+ * 存储策略：
+ *   - 本地 (file://) → File System Access API，自动写入 notes/ 下的 JSON 文件
+ *   - 在线 (http/https) → localStorage
  */
 
 class NotePanel {
   constructor(options = {}) {
     // 配置
     this.config = {
-      version: options.version || this._detectVersion(), // 当前版本
-      globalNotesFile: options.globalNotesFile || 'notes/overall-notes.json',
-      versionNotesFile: options.versionNotesFile || 'notes/version-notes.json',
+      version: options.version || this._detectVersion(),
       onUpdate: options.onUpdate || null
+    };
+
+    // localStorage 键名（在线模式使用）
+    this.keys = {
+      global: 'note_panel_global',
+      version: `note_panel_version_${this.config.version}`
     };
 
     // 状态
@@ -19,22 +25,34 @@ class NotePanel {
     this.globalNotes = [];
     this.versionNotes = [];
 
+    // 存储模式
+    this.isLocal = location.protocol === 'file:';
+
+    // File System Access API 句柄缓存
+    this._fsHandles = null; // { global: FileSystemDirectoryHandle, version: FileSystemDirectoryHandle }
+
+    // JSON 文件名
+    this._fileNames = {
+      global: 'overall-notes.json',
+      version: `version-notes-${this.config.version}.json`
+    };
+
+    // 计算 notes 目录的相对 URL
+    this._notesBaseUrl = this._resolveNotesUrl();
+
     // 初始化
     this._init();
   }
 
   /** 检测当前版本 */
   _detectVersion() {
-    // 1. 优先从 URL 参数获取
     const urlParams = new URLSearchParams(window.location.search);
     const urlVersion = urlParams.get('v');
     if (urlVersion) return urlVersion;
 
-    // 2. 从 meta 标签获取
     const metaVersion = document.querySelector('meta[name="version"]');
     if (metaVersion) return metaVersion.content;
 
-    // 3. 默认版本
     return 'v1.0';
   }
 
@@ -42,8 +60,286 @@ class NotePanel {
   _init() {
     this._createDOM();
     this._bindEvents();
-    this._loadNotes();
+
+    if (this.isLocal) {
+      this._initFileSystem().then(() => {
+        this._loadNotes();
+      }).catch(() => {
+        // 授权失败，仍然允许使用，但会降级到内存模式
+        this._loadNotes();
+      });
+    } else {
+      this._loadNotes();
+    }
   }
+
+  // ==================== File System Access API ====================
+
+  /** 计算 notes 目录的相对 URL（用于 fetch 读取） */
+  _resolveNotesUrl() {
+    // 从当前 HTML 的 script src 推算 notes 目录
+    const script = document.querySelector('script[src*="note-panel"]');
+    if (!script) return null;
+
+    const src = script.getAttribute('src');
+    // src 形如 "../note-panel/note-panel.js"，向上推一层到项目根目录
+    const scriptDir = src.substring(0, src.lastIndexOf('/'));
+    // "../note-panel" → 去掉最后一层得到 "../"
+    const projectRoot = scriptDir.substring(0, scriptDir.lastIndexOf('/'));
+    return projectRoot + '/note-panel/notes/';
+  }
+
+  /** 尝试用 fetch 从 notes 目录读取 JSON */
+  async _fetchJsonFile(fileName) {
+    if (!this._notesBaseUrl) return null;
+    try {
+      const resp = await fetch(this._notesBaseUrl + fileName);
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      return data.notes || [];
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /** 初始化文件系统访问 */
+  async _initFileSystem() {
+    if (!window.showDirectoryPicker) {
+      console.warn('当前浏览器不支持 File System Access API，将使用内存模式');
+      this._fsHandles = null;
+      return;
+    }
+
+    // 尝试从 localStorage 恢复句柄
+    const stored = localStorage.getItem('note_panel_fs_handles');
+    if (stored) {
+      try {
+        const handles = JSON.parse(stored);
+        this._fsHandles = {};
+        // 验证权限并恢复句柄
+        if (handles.global) {
+          const dirHandle = await window.showDirectoryPicker({ id: 'note-panel-notes', mode: 'readwrite' }).catch(() => null);
+          if (dirHandle) {
+            this._fsHandles.global = dirHandle;
+            this._fsHandles.version = dirHandle; // 同一个 notes 目录
+          }
+        }
+        // 清除旧的存储方式，因为 verifyPermission 已不可靠
+        localStorage.removeItem('note_panel_fs_handles');
+      } catch (e) {
+        this._fsHandles = null;
+      }
+    }
+
+    // 如果没有有效句柄，等待用户首次保存时请求授权
+    if (!this._fsHandles) {
+      this._fsReady = false;
+    }
+  }
+
+  /** 请求 notes 目录的授权 */
+  async _requestDirectoryAccess() {
+    try {
+      const dirHandle = await window.showDirectoryPicker({
+        id: 'note-panel-notes',
+        mode: 'readwrite',
+        startIn: 'documents'
+      });
+      this._fsHandles = {
+        global: dirHandle,
+        version: dirHandle
+      };
+      this._fsReady = true;
+      return true;
+    } catch (e) {
+      // 用户取消选择
+      console.warn('用户取消了目录授权');
+      return false;
+    }
+  }
+
+  /** 确保有目录访问权限 */
+  async _ensureDirectoryAccess() {
+    if (this._fsHandles) {
+      // 检查权限是否仍然有效
+      try {
+        const perm = await this._fsHandles.global.queryPermission({ mode: 'readwrite' });
+        if (perm === 'granted') return true;
+      } catch (e) {
+        // 忽略，重新请求
+      }
+    }
+    return await this._requestDirectoryAccess();
+  }
+
+  /** 从文件读取 JSON */
+  async _readJsonFile(dirHandle, fileName) {
+    try {
+      const fileHandle = await dirHandle.getFileHandle(fileName);
+      const file = await fileHandle.getFile();
+      const text = await file.text();
+      const data = JSON.parse(text);
+      return data.notes || [];
+    } catch (e) {
+      // 文件不存在或读取失败，返回空数组
+      return [];
+    }
+  }
+
+  /** 写入 JSON 文件 */
+  async _writeJsonFile(dirHandle, fileName, notes) {
+    const content = JSON.stringify({
+      notes: notes,
+      lastUpdated: new Date().toISOString()
+    }, null, 2);
+
+    const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(content);
+    await writable.close();
+  }
+
+  // ==================== 笔记加载 ====================
+
+  /** 加载笔记 */
+  async _loadNotes() {
+    if (this.isLocal) {
+      // 本地模式：优先用 File System Access API 读取，否则用 fetch，最后降级 localStorage
+      if (this._fsHandles) {
+        try {
+          this.globalNotes = await this._readJsonFile(this._fsHandles.global, this._fileNames.global);
+          this.versionNotes = await this._readJsonFile(this._fsHandles.version, this._fileNames.version);
+        } catch (e) {
+          console.warn('从文件系统加载笔记失败，尝试 fetch:', e);
+          this.globalNotes = (await this._fetchJsonFile(this._fileNames.global)) || [];
+          this.versionNotes = (await this._fetchJsonFile(this._fileNames.version)) || [];
+        }
+      } else {
+        // 尝试 fetch 读取（需本地 HTTP 服务，file:// 下会失败）
+        const globalData = await this._fetchJsonFile(this._fileNames.global);
+        const versionData = await this._fetchJsonFile(this._fileNames.version);
+        if (globalData !== null || versionData !== null) {
+          this.globalNotes = globalData || [];
+          this.versionNotes = versionData || [];
+        } else {
+          // fetch 也失败，降级到 localStorage
+          this._loadGlobalNotes();
+          this._loadVersionNotes();
+        }
+      }
+    } else {
+      this._loadGlobalNotes();
+      this._loadVersionNotes();
+    }
+    this._renderNotes();
+    this._updateBadge();
+  }
+
+  /** 从 localStorage 读取全局笔记 */
+  _loadGlobalNotes() {
+    try {
+      const data = localStorage.getItem(this.keys.global);
+      this.globalNotes = data ? JSON.parse(data) : [];
+    } catch (e) {
+      this.globalNotes = [];
+    }
+  }
+
+  /** 从 localStorage 读取版本笔记 */
+  _loadVersionNotes() {
+    try {
+      const data = localStorage.getItem(this.keys.version);
+      this.versionNotes = data ? JSON.parse(data) : [];
+    } catch (e) {
+      this.versionNotes = [];
+    }
+  }
+
+  // ==================== 笔记保存 ====================
+
+  /** 保存全局笔记 */
+  async _saveGlobalNotes() {
+    if (this.isLocal) {
+      const granted = await this._ensureDirectoryAccess();
+      if (granted) {
+        try {
+          await this._writeJsonFile(this._fsHandles.global, this._fileNames.global, this.globalNotes);
+          this._showSaveStatus('已保存到文件');
+        } catch (e) {
+          console.warn('保存全局笔记到文件失败:', e);
+          this._showSaveStatus('保存失败', true);
+          // 降级到 localStorage
+          this._saveGlobalToLocalStorage();
+        }
+        return;
+      }
+      // 用户取消授权，降级到 localStorage
+      this._saveGlobalToLocalStorage();
+      return;
+    }
+
+    this._saveGlobalToLocalStorage();
+  }
+
+  /** 保存全局笔记到 localStorage */
+  _saveGlobalToLocalStorage() {
+    try {
+      localStorage.setItem(this.keys.global, JSON.stringify(this.globalNotes));
+      if (this.config.onUpdate) this.config.onUpdate(this.globalNotes, 'global');
+    } catch (e) {
+      console.warn('保存全局笔记失败:', e);
+    }
+    this._updateBadge();
+  }
+
+  /** 保存版本笔记 */
+  async _saveVersionNotes() {
+    if (this.isLocal) {
+      const granted = await this._ensureDirectoryAccess();
+      if (granted) {
+        try {
+          await this._writeJsonFile(this._fsHandles.version, this._fileNames.version, this.versionNotes);
+          this._showSaveStatus('已保存到文件');
+        } catch (e) {
+          console.warn('保存版本笔记到文件失败:', e);
+          this._showSaveStatus('保存失败', true);
+          this._saveVersionToLocalStorage();
+        }
+        return;
+      }
+      this._saveVersionToLocalStorage();
+      return;
+    }
+
+    this._saveVersionToLocalStorage();
+  }
+
+  /** 保存版本笔记到 localStorage */
+  _saveVersionToLocalStorage() {
+    try {
+      localStorage.setItem(this.keys.version, JSON.stringify(this.versionNotes));
+      if (this.config.onUpdate) this.config.onUpdate(this.versionNotes, 'version');
+    } catch (e) {
+      console.warn('保存版本笔记失败:', e);
+    }
+    this._updateBadge();
+  }
+
+  /** 显示保存状态提示 */
+  _showSaveStatus(message, isError = false) {
+    // 移除旧提示
+    const old = this.panel.querySelector('.note-save-status');
+    if (old) old.remove();
+
+    const status = document.createElement('div');
+    status.className = `note-save-status${isError ? ' error' : ''}`;
+    status.textContent = message;
+    this.panel.querySelector('.note-input-area').appendChild(status);
+
+    setTimeout(() => status.remove(), 2000);
+  }
+
+  // ==================== UI 交互 ====================
 
   /** 创建 DOM 结构 */
   _createDOM() {
@@ -94,9 +390,9 @@ class NotePanel {
 
       <div class="note-panel-body">
         <div class="note-list" id="noteList"></div>
-        <div class="note-empty" id="noteEmpty" style="display: none;">
+        <div class="note-empty hidden" id="noteEmpty">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
           </svg>
           <p>暂无笔记</p>
         </div>
@@ -172,136 +468,6 @@ class NotePanel {
     });
   }
 
-  /** 加载笔记 */
-  async _loadNotes() {
-    // 并行加载全局笔记和版本笔记
-    await Promise.all([
-      this._loadGlobalNotes(),
-      this._loadVersionNotes()
-    ]);
-
-    // 渲染列表
-    this._renderNotes();
-    this._updateBadge();
-  }
-
-  /** 加载全局笔记 (JSON 文件) */
-  async _loadGlobalNotes() {
-    try {
-      const response = await fetch(this.config.globalNotesFile);
-      if (response.ok) {
-        const data = await response.json();
-        this.globalNotes = data.notes || [];
-        // 同步缓存到 localStorage
-        this._cacheGlobalNotes();
-      } else {
-        // 文件加载失败时回退到 localStorage 缓存
-        this.globalNotes = this._getCachedGlobalNotes();
-      }
-    } catch (e) {
-      // fetch 失败时回退到 localStorage 缓存
-      console.warn('加载全局笔记失败，使用本地缓存:', e);
-      this.globalNotes = this._getCachedGlobalNotes();
-    }
-  }
-
-  /** 保存全局笔记 (下载 JSON 文件) */
-  _saveGlobalNotes() {
-    const data = {
-      notes: this.globalNotes,
-      lastUpdated: new Date().toISOString()
-    };
-
-    // 更新 localStorage 缓存
-    this._cacheGlobalNotes();
-
-    // 触发回调
-    if (this.config.onUpdate) {
-      this.config.onUpdate(data, 'global');
-    }
-
-    // 下载 JSON 文件
-    this._downloadGlobalJSON(data);
-
-    this._updateBadge();
-  }
-
-  /** 缓存全局笔记到 localStorage（作为本地读取回退） */
-  _cacheGlobalNotes() {
-    try {
-      localStorage.setItem('note_panel_global_cache', JSON.stringify(this.globalNotes));
-    } catch (e) {
-      // localStorage 不可用时静默失败
-    }
-  }
-
-  /** 从 localStorage 读取缓存 */
-  _getCachedGlobalNotes() {
-    try {
-      const data = localStorage.getItem('note_panel_global_cache');
-      return data ? JSON.parse(data) : [];
-    } catch (e) {
-      return [];
-    }
-  }
-
-  /** 加载版本笔记 (JSON 文件) */
-  async _loadVersionNotes() {
-    try {
-      const response = await fetch(this.config.versionNotesFile);
-      if (response.ok) {
-        const data = await response.json();
-        this.versionNotes = data.notes || [];
-      } else {
-        this.versionNotes = [];
-      }
-    } catch (e) {
-      this.versionNotes = [];
-    }
-  }
-
-  /** 保存版本笔记 (下载 JSON 文件) */
-  _saveVersionNotes() {
-    const data = {
-      version: this.config.version,
-      notes: this.versionNotes,
-      lastUpdated: new Date().toISOString()
-    };
-
-    if (this.config.onUpdate) {
-      this.config.onUpdate(data, 'version');
-    }
-
-    this._downloadVersionJSON(data);
-    this._updateBadge();
-  }
-
-  /** 下载全局笔记 JSON 文件 */
-  _downloadGlobalJSON(data) {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'notes/overall-notes.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  /** 下载版本笔记 JSON 文件 */
-  _downloadVersionJSON(data) {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `notes/version-notes-${this.config.version}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
   /** 切换面板 */
   toggle() {
     this.isOpen ? this.close() : this.open();
@@ -346,7 +512,6 @@ class NotePanel {
       updatedAt: new Date().toISOString()
     };
 
-    // 添加版本标签（版本笔记）
     if (this.activeTab === 'version') {
       note.tags = [this.config.version];
       const customTags = tagInput.value.trim();
@@ -392,11 +557,11 @@ class NotePanel {
 
     if (notes.length === 0) {
       list.innerHTML = '';
-      empty.style.display = 'block';
+      empty.classList.remove('hidden');
       return;
     }
 
-    empty.style.display = 'none';
+    empty.classList.add('hidden');
     list.innerHTML = notes.map(note => this._renderNoteItem(note, highlightId)).join('');
 
     // 绑定删除事件
@@ -464,16 +629,10 @@ class NotePanel {
     const now = new Date();
     const diff = now - date;
 
-    // 1 分钟内
     if (diff < 60000) return '刚刚';
-
-    // 1 小时内
     if (diff < 3600000) return `${Math.floor(diff / 60000)} 分钟前`;
-
-    // 24 小时内
     if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小时前`;
 
-    // 超过 24 小时
     return date.toLocaleString('zh-CN', {
       month: 'short',
       day: 'numeric',
